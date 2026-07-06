@@ -1,12 +1,12 @@
 {
-  "scenario": "US-1",
-  "attempts": 0,
+  "scenario": "US-2",
+  "attempts": 1,
   "max_attempts": 3,
-  "refactor_cycles": 0,
+  "refactor_cycles": 1,
   "max_refactor_cycles": 3,
-  "total_steps": 0,
+  "total_steps": 2,
   "max_steps": 10,
   "cost_estimate": 0,
   "budget_max_usd": 0.50,
-  "state": "running"
+  "state": "committed"
 }
