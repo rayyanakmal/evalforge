@@ -22,11 +22,15 @@ class ScoreResult(BaseModel):
 
 
 class TokenCount(BaseModel):
-    """Token usage for a single LLM call."""
+    """Token usage for a single LLM call.
+    
+    Fields are Optional[int] to support open-source models
+    that don't report token counts (N/A edge case per US-3).
+    """
     __test__ = False
-    input: int = 0
-    output: int = 0
-    total: int = 0
+    input: Optional[int] = 0
+    output: Optional[int] = 0
+    total: Optional[int] = 0
 
 
 class TestResult(BaseModel):
@@ -56,6 +60,23 @@ class Summary(BaseModel):
     latency_p50: Optional[float] = None
     latency_p95: Optional[float] = None
     latency_p99: Optional[float] = None
+
+
+class TrackingSummary(BaseModel):
+    """Aggregate metrics produced by Trackers.
+
+    Produced by CostTracker and LatencyTracker.summarize().
+    Separate from Summary to keep tracking concerns isolated.
+    """
+    __test__ = False
+    total_cost_usd: float = 0.0
+    avg_latency_ms: float = 0.0
+    latency_p50: float = 0.0
+    latency_p95: float = 0.0
+    latency_p99: float = 0.0
+    total_input_tokens: int = 0
+    total_output_tokens: int = 0
+    warning_p99_unreliable: bool = False
 
 
 class RunResult(BaseModel):

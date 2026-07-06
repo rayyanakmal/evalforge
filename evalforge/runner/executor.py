@@ -18,6 +18,8 @@ from evalforge.models.result import (
 from evalforge.models.llm import LLMResponse
 from evalforge.scoring.base import Scorer
 from evalforge.runner.retry import retry_with_backoff
+from evalforge.tracking.cost import CostTracker
+from evalforge.tracking.latency import LatencyTracker
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +38,8 @@ class ChangeItem:
     test_id: str
     baseline_status: str
     candidate_status: str
+    cost_delta: float = 0.0
+    latency_delta: float = 0.0
 
 
 @dataclass
@@ -81,10 +85,17 @@ def compare_results(baseline: RunResult, candidate: RunResult) -> ComparisonRepo
         b_status = b.status if b else "missing"
         c_status = c.status if c else "missing"
 
+        b_cost = b.cost_usd if b else 0.0
+        c_cost = c.cost_usd if c else 0.0
+        b_lat = b.latency_ms if b else 0.0
+        c_lat = c.latency_ms if c else 0.0
+
         item = ChangeItem(
             test_id=tid,
             baseline_status=b_status,
             candidate_status=c_status,
+            cost_delta=c_cost - b_cost,
+            latency_delta=c_lat - b_lat,
         )
 
         # Determine regression vs improvement
@@ -147,6 +158,10 @@ class Executor:
         """
         start_time = time.monotonic()
 
+        # Initialize trackers for this run
+        cost_tracker = CostTracker()
+        latency_tracker = LatencyTracker()
+
         # Edge case: empty suite
         if not suite.tests:
             duration_ms = (time.monotonic() - start_time) * 1000
@@ -162,7 +177,9 @@ class Executor:
 
         async def run_one_test(test: TestCase) -> TestResult:
             async with semaphore:
-                return await self._execute_test(test)
+                return await self._execute_test_with_tracking(
+                    test, cost_tracker, latency_tracker
+                )
 
         results = await asyncio.gather(
             *(run_one_test(t) for t in suite.tests)
@@ -170,8 +187,8 @@ class Executor:
 
         duration_ms = (time.monotonic() - start_time) * 1000
 
-        # Build summary
-        summary = self._build_summary(results)
+        # Build summary with tracker data
+        summary = self._build_summary(results, cost_tracker, latency_tracker)
 
         return RunResult(
             suite_name=suite.name,
@@ -180,6 +197,18 @@ class Executor:
             tests=list(results),
             summary=summary,
         )
+
+    async def _execute_test_with_tracking(
+        self,
+        test: TestCase,
+        cost_tracker: CostTracker,
+        latency_tracker: LatencyTracker,
+    ) -> TestResult:
+        """Execute a single test and feed results to trackers."""
+        result = await self._execute_test(test)
+        cost_tracker.track(result)
+        latency_tracker.track(result)
+        return result
 
     async def _execute_test(self, test: TestCase) -> TestResult:
         """Execute a single test case: call LLM, score, return result."""
@@ -247,8 +276,12 @@ class Executor:
         )
 
     @staticmethod
-    def _build_summary(results: list[TestResult]) -> Summary:
-        """Compute aggregate statistics from test results."""
+    def _build_summary(
+        results: list[TestResult],
+        cost_tracker: Optional[CostTracker] = None,
+        latency_tracker: Optional[LatencyTracker] = None,
+    ) -> Summary:
+        """Compute aggregate statistics from test results and trackers."""
         total = len(results)
         passed = sum(1 for r in results if r.status == "pass")
         failed = sum(1 for r in results if r.status == "fail")
@@ -256,15 +289,25 @@ class Executor:
 
         pass_rate = passed / total if total > 0 else 0.0
 
-        total_cost = sum(r.cost_usd for r in results)
-        latencies = [r.latency_ms for r in results if r.latency_ms > 0]
+        # Use tracker summaries if available, fall back to direct computation
+        if cost_tracker is not None:
+            cost_summary = cost_tracker.summarize()
+            total_cost = cost_summary.total_cost_usd
+        else:
+            total_cost = sum(r.cost_usd for r in results)
 
-        avg_latency = sum(latencies) / len(latencies) if latencies else 0.0
-
-        # Percentiles (only computed if we have data)
-        p50 = _percentile(latencies, 50) if latencies else None
-        p95 = _percentile(latencies, 95) if latencies else None
-        p99 = _percentile(latencies, 99) if latencies else None
+        if latency_tracker is not None:
+            lat_summary = latency_tracker.summarize()
+            avg_latency = lat_summary.avg_latency_ms
+            p50 = lat_summary.latency_p50 if lat_summary.latency_p50 > 0 else None
+            p95 = lat_summary.latency_p95 if lat_summary.latency_p95 > 0 else None
+            p99 = lat_summary.latency_p99 if lat_summary.latency_p99 > 0 else None
+        else:
+            latencies = [r.latency_ms for r in results if r.latency_ms > 0]
+            avg_latency = sum(latencies) / len(latencies) if latencies else 0.0
+            p50 = _percentile(latencies, 50) if latencies else None
+            p95 = _percentile(latencies, 95) if latencies else None
+            p99 = _percentile(latencies, 99) if latencies else None
 
         return Summary(
             total=total,

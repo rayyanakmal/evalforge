@@ -1,0 +1,57 @@
+{
+  "suite_name": "Example Suite",
+  "timestamp": "2026-07-06T14:34:29.016501+00:00",
+  "duration_ms": 0.0,
+  "tests": [
+    {
+      "id": "hello-exact",
+      "status": "pass",
+      "response": "(dry-run: no LLM call)",
+      "expected_value": "Hello",
+      "score": {
+        "overall": 1.0,
+        "dimensions": null,
+        "method": "dry-run"
+      },
+      "tokens": {
+        "input": 0,
+        "output": 0,
+        "total": 0
+      },
+      "latency_ms": 0.0,
+      "cost_usd": 0.0,
+      "error": null
+    },
+    {
+      "id": "capital-question",
+      "status": "pass",
+      "response": "(dry-run: no LLM call)",
+      "expected_value": "Paris",
+      "score": {
+        "overall": 1.0,
+        "dimensions": null,
+        "method": "dry-run"
+      },
+      "tokens": {
+        "input": 0,
+        "output": 0,
+        "total": 0
+      },
+      "latency_ms": 0.0,
+      "cost_usd": 0.0,
+      "error": null
+    }
+  ],
+  "summary": {
+    "total": 2,
+    "passed": 2,
+    "failed": 0,
+    "errored": 0,
+    "pass_rate": 1.0,
+    "total_cost_usd": 0.0,
+    "avg_latency_ms": 0.0,
+    "latency_p50": null,
+    "latency_p95": null,
+    "latency_p99": null
+  }
+}
