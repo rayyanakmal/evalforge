@@ -1,0 +1,27 @@
+[project]
+name = "evalforge"
+version = "0.1.0"
+description = "Eval-driven agent testing framework"
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2.0",
+    "httpx>=0.27",
+    "pyyaml>=6.0",
+    "typer>=0.12",
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+]
+
+[project.scripts]
+evalforge = "evalforge.cli:app"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.setuptools.packages.find]
+include = ["evalforge*"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
