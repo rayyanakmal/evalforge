@@ -2,3 +2,23 @@
 *.egg-info/
 *.egg
 dist/
+
+# Hygiene (added by automated audit)
+# Environment
+.env
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+# macOS
+.DS_Store
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+# Build
+build/
+*.egg/
