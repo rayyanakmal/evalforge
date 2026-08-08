@@ -25,3 +25,7 @@ build/
 
 # Streamlit secrets — never commit
 .streamlit/secrets.toml
+
+# Generated eval output — never commit
+evalforge-output/
+evalforge-baselines/
