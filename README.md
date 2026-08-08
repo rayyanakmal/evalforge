@@ -35,7 +35,7 @@ Think of it as **unit tests for AI**. You define a list of questions your custom
 
 <div align="center">
   <a href="https://evalforge-wmdbf6rtfxjzh668zugy9d.streamlit.app/">
-    <img src="assets/demo.gif" alt="EvalForge dashboard demo — comparing two versions of an AI agent and catching a regression" width="700">
+    <img src="assets/dashboard.png" alt="EvalForge dashboard — comparing two versions of an AI agent and catching a regression" width="700">
   </a>
   <p><em>Live app: compare two versions of an agent and catch regressions in seconds.</em></p>
 </div>
@@ -266,7 +266,7 @@ concurrency: 10
 
 - [SPEC.md](SPEC.md) — Full behavior spec with acceptance criteria
 - [ARCHITECTURE.md](ARCHITECTURE.md) — Design, interfaces, extension points
-- [assets/demo.gif](assets/demo.gif) — Dashboard demo
+- [assets/dashboard.png](assets/dashboard.png) — Dashboard screenshot
 - [examples/gen_samples.py](examples/gen_samples.py) — Sample regression-story data generator
 
 ## License
