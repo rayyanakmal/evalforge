@@ -179,6 +179,11 @@ evalforge/
 │   │   ├── __init__.py
 │   │   ├── main.py        # Click group: run, compare, gate, init
 │   │   └── init.py        # Scaffolding logic
+│   ├── ui/                # Web dashboard (Streamlit)
+│   │   ├── __init__.py
+│   │   ├── streamlit_app.py  # Dashboard entry: metrics, matrix, upload
+│   │   ├── metrics.py        # RAGAS-style metric presets (rubric templates)
+│   │   └── style.css         # Design system (bundled, deploy-safe)
 │   ├── runner/            # Test execution engine
 │   │   ├── __init__.py
 │   │   ├── executor.py    # Concurrent test runner
@@ -218,7 +223,7 @@ evalforge/
 
 ## Out of Scope (v0.1)
 
-- GUI / dashboard (CLI-only for v0.1)
+- ~~GUI / dashboard~~ — **Done:** Streamlit web dashboard added in `evalforge/ui/` (see README "Web Dashboard")
 - Real-time streaming evaluation (batch-only)
 - Plugin system for custom scorers (hardcoded strategies, extensible via base class)
 - CI provider integrations (exits with code, user pipes to GitHub Actions)

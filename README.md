@@ -23,8 +23,11 @@ Most teams can build an LLM demo. Almost nobody can prove their system is **reli
 ## Quick Start
 
 ```bash
-# Install
+# Install (core CLI)
 pip install evalforge
+
+# Install with dashboard UI
+pip install "evalforge[ui]"
 
 # Scaffold a new evaluation project
 evalforge init
@@ -37,7 +40,25 @@ evalforge compare baselines/run-1.json evalforge-output/report-<ts>.json
 
 # CI gate — exits 0 (pass) or 1 (fail)
 evalforge gate
+
+# Launch the web dashboard
+streamlit run evalforge/ui/streamlit_app.py
 ```
+
+## 📊 Web Dashboard
+
+Explore evaluation results without touching the CLI. Load one run for metrics, or two runs for a side-by-side regression matrix.
+
+**Live demo:** https://evalforge-wmdbf6rtfxjzh668zugy9d.streamlit.app/
+
+![EvalForge dashboard](assets/dashboard.png)
+
+- **Summary cards** — pass rate, case count, avg latency, total cost
+- **Per-case table** — status-highlighted results (pass/fail/error) with scores, latency, cost
+- **Regression matrix** — load v1 vs v2 and see exactly which cases flipped pass→fail (regression) or fail→pass (fixed)
+- **Latency percentiles** — p50/p95/p99 + token usage under the hood
+- **RAGAS-style metric presets** — industry-standard rubric vocabulary (faithfulness, answer relevancy, context precision, context recall, answer correctness) built in as LLM-judge rubric templates — no extra dependency
+- **Upload support** — drop in your own `RunResult` JSON files, or use the built-in v1/v2 sample regression story
 
 ## Example Test Suite
 
@@ -89,6 +110,12 @@ tests:
 - Per-test token counts and cost
 - Aggregate statistics: avg, p50/p95/p99 latency
 - Cost/latency deltas between runs — catch regressions before they hit your wallet
+
+### 📊 Web Dashboard (Streamlit)
+- Explore run results with summary cards and per-case tables
+- Side-by-side regression matrix — see exactly which cases flipped
+- RAGAS-style metric presets as built-in LLM-judge rubrics
+- Upload your own `RunResult` JSON, or use the sample v1/v2 regression story
 
 ### 🚦 CI Gate Integration
 - Define regression thresholds in `evalforge.yaml`
@@ -173,7 +200,7 @@ concurrency: 10
 
 ## Project Status
 
-**v0.1.0-alpha** — Core engine, LLM-as-Judge scoring, cost tracking, CI gate, and CLI complete. Built for and tested on DeepSeek v4, extensible to any OpenAI-compatible API.
+**v0.1.0-alpha** — Core engine, LLM-as-Judge scoring, cost tracking, CI gate, CLI, and Streamlit web dashboard complete. Built for and tested on DeepSeek v4, extensible to any OpenAI-compatible API. Dashboard live at [Streamlit Community Cloud](https://evalforge-wmdbf6rtfxjzh668zugy9d.streamlit.app/).
 
 ### Roadmap
 
@@ -182,7 +209,7 @@ concurrency: 10
 - [x] Cost & latency tracking
 - [x] CI gate with regression detection
 - [x] CLI commands (run, compare, gate, init)
-- [ ] Web dashboard for visualizing results
+- [x] Web dashboard for visualizing results
 - [ ] GitHub Actions integration
 - [ ] Real-time streaming evaluation
 - [ ] Plugin system for custom scorers
@@ -191,7 +218,8 @@ concurrency: 10
 
 - [SPEC.md](SPEC.md) — Full behavior spec with acceptance criteria
 - [ARCHITECTURE.md](ARCHITECTURE.md) — Design, interfaces, extension points
-- [gates/SUMMARY.md](gates/SUMMARY.md) — Multi-gate verification results
+- [assets/dashboard.png](assets/dashboard.png) — Dashboard screenshot
+- [examples/gen_samples.py](examples/gen_samples.py) — Sample regression-story data generator
 
 ---
 

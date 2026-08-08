@@ -163,6 +163,21 @@ evalforge/
 │   │       #   - creates: evalforge.yaml, test-suites/example/suite.yaml, .gitignore
 │   │       #   Purpose: bootstraps a new EvalForge project
 │   │
+│   ├── ui/                       # Web dashboard (Streamlit)
+│   │   ├── __init__.py           # Empty
+│   │   ├── streamlit_app.py      # Dashboard entry point
+│   │   #   #   - Loads 1-2 RunResult JSONs (sample v1/v2 or upload)
+│   │   #   #   - Renders summary cards, per-case tables, regression matrix
+│   │   #   #   - Reads existing RunResult/Summary/TrackingSummary models — no new data shapes
+│   │   #   #   Purpose: human-friendly exploration of evalforge results
+│   │   ├── metrics.py            # RAGAS-style metric presets
+│   │   #   #   - RAGAS_METRICS: dict of metric name → RubricDimension (1-dim rubric)
+│   │   #   #   - Faithfulness, Answer Relevancy, Context Precision/Recall, Answer Correctness
+│   │   #   #   - Pure prompt templates — no RAGAS dependency; plugs into RubricScorer
+│   │   #   #   Purpose: standard evaluation vocabulary as built-in judge rubrics
+│   │   └── style.css             # Design system (4/8/16/24px scale, one accent + neutrals)
+│   │       #   Purpose: deterministic layout; bundled in-repo for cloud deploy
+│   │
 │   ├── runner/                   # Test execution engine
 │   │   ├── __init__.py           # Empty
 │   │   ├── executor.py           # Concurrent test runner
@@ -664,6 +679,7 @@ Every new feature = new file, never editing existing implementation files.
 | **pyyaml** | YAML parsing | User requirement; loads TestSuite .yaml files and evalforge.yaml config |
 | **asyncio** | Concurrency | User requirement; `asyncio.Semaphore(10)` bounds parallelism, `asyncio.gather` for concurrent test execution |
 | **pytest** + **pytest-asyncio** | Testing | Standard Python testing; async test support for executor and client tests |
+| **streamlit** (optional) | Web dashboard | `evalforge[ui]` extra; renders RunResult JSONs (summary cards, per-case tables, regression matrix) with zero server code |
 | **rich** (optional) | Terminal formatting | Not specified but recommended for ConsoleReporter tables; can fall back to plain text |
 
 **What we're NOT using (and why):**
