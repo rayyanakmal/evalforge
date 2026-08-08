@@ -6,19 +6,71 @@
 </p>
 
 <h1 align="center">⚒️ EvalForge</h1>
-<p align="center"><em>Eval-driven agent testing framework — forge reliable AI systems.</em></p>
+<p align="center"><em>The report card for your AI agents.</em></p>
 
 <p align="center">
-  Define test suites. Run LLM systems against them. Score across correctness, cost, latency, and safety. Gate deployments on regressions.
+  <a href="https://evalforge-wmdbf6rtfxjzh668zugy9d.streamlit.app/"><strong>🚀 Try the Live Demo</strong></a> ·
+  <a href="#how-it-works"><strong>How it works</strong></a> ·
+  <a href="#quick-start"><strong>Quickstart</strong></a> ·
+  <a href="#features"><strong>Features</strong></a> ·
+  <a href="#who-is-this-for"><strong>Who is this for</strong></a> ·
+  <a href="SPEC.md"><strong>Spec</strong></a> ·
+  <a href="ARCHITECTURE.md"><strong>Architecture</strong></a>
 </p>
 
 ---
 
-## Why EvalForge?
+## What is this?
 
-> *"If there is one skill separating senior AI practitioners in 2026, it is evaluation."* — World AI Expo
+**EvalForge checks whether AI agents actually work — before you trust them.**
 
-Most teams can build an LLM demo. Almost nobody can prove their system is **reliable, safe, and cost-effective** over time. EvalForge bridges that gap — it brings the same disciplined testing culture that software engineering has (CI/CD, regression gates, benchmarks) to the probabilistic world of LLMs.
+AI is great at sounding confident. The problem is it's often *wrong* while sounding confident. EvalForge solves this the same way software engineers have always solved it: **write down what "correct" looks like, run the AI against it, and see exactly where it fails.**
+
+Think of it as **unit tests for AI**. You define a list of questions your customers might ask, run your agent against them, and get a clear report card:
+
+- What % of questions did it answer correctly?
+- Which specific questions did it get wrong — and what did it say?
+- How fast is it? How much does it cost per answer?
+- If you change your agent (new model, new prompt), did anything that used to work *break*?
+
+<div align="center">
+  <a href="https://evalforge-wmdbf6rtfxjzh668zugy9d.streamlit.app/">
+    <img src="assets/demo.gif" alt="EvalForge dashboard demo — comparing two versions of an AI agent and catching a regression" width="700">
+  </a>
+  <p><em>Live app: compare two versions of an agent and catch regressions in seconds.</em></p>
+</div>
+
+---
+
+## How it works
+
+```
+  1. WRITE         2. RUN             3. REVIEW
+  ─────────────    ──────────────     ──────────────
+  You write the    EvalForge calls    Open the dashboard:
+  questions your   your agent with    pass rate, cost, speed,
+  customers ask +  each one, checks   and exactly which
+  what a good      the answer, and    questions it got wrong.
+  answer looks     records pass/fail
+  like.            + cost + speed.
+```
+
+- **You define what "right" means** — no AI needed for that, just knowledge of your business
+- **EvalForge does the checking** — deterministically and consistently, every time
+- **The dashboard is the scoreboard** — see everything in one view, or compare two versions side-by-side
+
+---
+
+## Who is this for?
+
+- **Founders** — prove your AI feature actually works before launch, and catch it silently degrading after
+- **ML/AI Engineers** who ship LLM features and need to show they work
+- **RAG pipeline builders** — evaluate retrieval + generation quality independently
+- **Multi-agent system architects** — benchmark orchestration quality
+- **Platform teams** who want a CI gate for LLM changes
+- **Freelancers** doing LLM integration — show clients measurable quality
+
+---
 
 ## Quick Start
 
@@ -51,14 +103,42 @@ Explore evaluation results without touching the CLI. Load one run for metrics, o
 
 **Live demo:** https://evalforge-wmdbf6rtfxjzh668zugy9d.streamlit.app/
 
-![EvalForge dashboard](assets/dashboard.png)
-
 - **Summary cards** — pass rate, case count, avg latency, total cost
 - **Per-case table** — status-highlighted results (pass/fail/error) with scores, latency, cost
 - **Regression matrix** — load v1 vs v2 and see exactly which cases flipped pass→fail (regression) or fail→pass (fixed)
 - **Latency percentiles** — p50/p95/p99 + token usage under the hood
 - **RAGAS-style metric presets** — industry-standard rubric vocabulary (faithfulness, answer relevancy, context precision, context recall, answer correctness) built in as LLM-judge rubric templates — no extra dependency
 - **Upload support** — drop in your own `RunResult` JSON files, or use the built-in v1/v2 sample regression story
+
+---
+
+## Features
+
+### ✅ Prove your AI works
+- **Pass/fail on every question** — run your agent against a test suite and see the pass rate instantly
+- **See the actual wrong answers** — not just "failed," but what the agent said vs. what was right
+
+### 🚨 Catch regressions before they ship
+- **Before/after comparison** — change a model or prompt, rerun, and see exactly which cases broke
+- **CI gate** — fail the build automatically if quality drops past a threshold (exit code 0/1, works with any CI)
+
+### 💰 Know what it costs
+- **Per-test cost and token counts** — know what every answer costs
+- **Latency p50/p95/p99** — catch slow degradations before users notice
+
+### 🔬 Multiple scoring strategies
+- **Exact match** — for factual questions with precise answers
+- **LLM-as-Judge** — rubric-based evaluation across custom dimensions (accuracy, tone, completeness, etc.)
+- **Semantic similarity** — embedding-based comparison for open-ended responses
+- **RAGAS-style presets** — faithfulness, answer relevancy, context precision, context recall, answer correctness
+
+### 🧩 Extensible
+- **Scorers**: `ExactScorer`, `RubricScorer`, `SemanticScorer` — add custom ones via base class
+- **LLM Clients**: DeepSeek, OpenAI, Anthropic — add providers via base class
+- **Reporters**: JSON, Console, Diff — add formats via base class
+- **Trackers**: Cost, Latency — add metrics via base class
+
+---
 
 ## Example Test Suite
 
@@ -98,36 +178,6 @@ tests:
 | `evalforge compare <baseline> <candidate>` | Diff two runs (score, cost, latency) |
 | `evalforge gate` | CI gate — checks regression against baseline |
 | `evalforge --help` | Show all commands |
-
-## Features
-
-### 🔬 Multi-Strategy Scoring
-- **Exact match** — for factual questions with precise answers
-- **LLM-as-Judge** — rubric-based evaluation across custom dimensions (accuracy, tone, completeness, etc.)
-- **Semantic similarity** — embedding-based comparison for open-ended responses
-
-### 📊 Cost & Latency Tracking  
-- Per-test token counts and cost
-- Aggregate statistics: avg, p50/p95/p99 latency
-- Cost/latency deltas between runs — catch regressions before they hit your wallet
-
-### 📊 Web Dashboard (Streamlit)
-- Explore run results with summary cards and per-case tables
-- Side-by-side regression matrix — see exactly which cases flipped
-- RAGAS-style metric presets as built-in LLM-judge rubrics
-- Upload your own `RunResult` JSON, or use the sample v1/v2 regression story
-
-### 🚦 CI Gate Integration
-- Define regression thresholds in `evalforge.yaml`
-- Auto-creates baselines on first run
-- Fails the build when quality/cost/latency degrades beyond limits
-- Exit code 0/1 — works with GitHub Actions, GitLab CI, or any CI system
-
-### 🧩 Extensible Architecture
-- **Scorers**: `ExactScorer`, `RubricScorer`, `SemanticScorer` — add custom ones via base class
-- **LLM Clients**: DeepSeek, OpenAI, Anthropic — add providers via base class
-- **Reporters**: JSON, Console, Diff — add formats via base class
-- **Trackers**: Cost, Latency — add metrics via base class
 
 ## Architecture
 
@@ -190,13 +240,11 @@ concurrency: 10
 }
 ```
 
-## Who Is This For?
+## Built with
 
-- **ML/AI Engineers** who ship LLM features and need to prove they work
-- **RAG pipeline builders** — evaluate retrieval + generation quality independently
-- **Multi-agent system architects** — benchmark orchestration quality
-- **Platform teams** who want a CI gate for LLM changes
-- **Freelancers** doing LLM integration — show clients measurable quality
+- **Python 3.11+** — core engine (async, Pydantic v2)
+- **Streamlit** — web dashboard
+- **DeepSeek v4** — primary LLM provider (extensible to any OpenAI-compatible API)
 
 ## Project Status
 
@@ -218,8 +266,12 @@ concurrency: 10
 
 - [SPEC.md](SPEC.md) — Full behavior spec with acceptance criteria
 - [ARCHITECTURE.md](ARCHITECTURE.md) — Design, interfaces, extension points
-- [assets/dashboard.png](assets/dashboard.png) — Dashboard screenshot
+- [assets/demo.gif](assets/demo.gif) — Dashboard demo
 - [examples/gen_samples.py](examples/gen_samples.py) — Sample regression-story data generator
+
+## License
+
+[MIT](LICENSE)
 
 ---
 
