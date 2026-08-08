@@ -1,0 +1,49 @@
+{
+  "suite_name": "my-ai-v1",
+  "timestamp": "2026-08-08T10:00:00Z",
+  "duration_ms": 3210,
+  "tests": [
+    {
+      "id": "case-1",
+      "status": "pass",
+      "response": "The capital of France is Paris.",
+      "expected_value": "Paris",
+      "score": {"overall": 1.0, "method": "exact"},
+      "tokens": {"input": 15, "output": 8, "total": 23},
+      "latency_ms": 420,
+      "cost_usd": 0.0001
+    },
+    {
+      "id": "case-2",
+      "status": "pass",
+      "response": "A refund is issued within 5 business days.",
+      "expected_value": "refund within 5 days",
+      "score": {"overall": 1.0, "method": "exact"},
+      "tokens": {"input": 20, "output": 12, "total": 32},
+      "latency_ms": 510,
+      "cost_usd": 0.00012
+    },
+    {
+      "id": "case-3",
+      "status": "pass",
+      "response": "The store opens at 9am and closes at 9pm.",
+      "expected_value": "9am to 9pm",
+      "score": {"overall": 1.0, "method": "exact"},
+      "tokens": {"input": 18, "output": 10, "total": 28},
+      "latency_ms": 380,
+      "cost_usd": 0.00009
+    }
+  ],
+  "summary": {
+    "total": 3,
+    "passed": 3,
+    "failed": 0,
+    "errored": 0,
+    "pass_rate": 1.0,
+    "total_cost_usd": 0.00031,
+    "avg_latency_ms": 437,
+    "latency_p50": 420,
+    "latency_p95": 510,
+    "latency_p99": 510
+  }
+}
