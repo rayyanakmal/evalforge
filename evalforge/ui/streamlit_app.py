@@ -20,8 +20,15 @@ from evalforge.ui.metrics import RAGAS_METRICS, metric_names
 
 st.set_page_config(page_title="evalforge — Eval Dashboard", page_icon="⚡", layout="wide")
 
+# Fonts (Inter body / Space Grotesk display / JetBrains Mono data) + design CSS
 CSS = Path(__file__).resolve().parent / "style.css"
 if CSS.exists():
+    st.markdown(
+        """<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">""",
+        unsafe_allow_html=True,
+    )
     st.markdown(f"<style>{CSS.read_text()}</style>", unsafe_allow_html=True)
 
 EXAMPLES = Path(__file__).resolve().parent.parent.parent / "examples"
@@ -61,7 +68,23 @@ def load_uploaded(uploaded) -> RunResult | None:
 # Rendering helpers
 # ---------------------------------------------------------------------------
 def status_color(status: str) -> str:
-    return {"pass": "#16A34A", "fail": "#DC2626", "error": "#D97706"}.get(status, "#64748B")
+    s = status or ""
+    if "pass" in s:
+        return "#16A34A"
+    if "fail" in s:
+        return "#DC2626"
+    if "error" in s:
+        return "#D97706"
+    return "#64748B"
+
+
+STATUS_ICON = {"pass": "✅", "fail": "❌", "error": "⚠️"}
+
+
+def status_text(status: str) -> str:
+    if not status:
+        return "—"
+    return f"{STATUS_ICON.get(status, '•')} {status}"
 
 
 def render_metrics(run: RunResult, key_prefix: str):
@@ -95,7 +118,7 @@ def run_to_df(run: RunResult) -> pd.DataFrame:
     for t in run.tests:
         rows.append({
             "case": t.id,
-            "status": t.status,
+            "status": status_text(t.status),
             "score": round(t.score.overall, 2) if t.score else None,
             "latency_ms": t.latency_ms,
             "cost_usd": t.cost_usd,
@@ -113,10 +136,14 @@ def style_status(val: str) -> str:
 # ---------------------------------------------------------------------------
 # App
 # ---------------------------------------------------------------------------
-st.title("evalforge — LLM Evaluation Dashboard")
 st.markdown(
-    "Scores model outputs against test suites. Load a run to see pass rates, "
-    "cost, latency, and error analysis — or compare **two runs** to catch regressions."
+    """<div class="hero">
+  <span class="eyebrow">Eval-driven agent testing</span>
+  <h1 class="hero-title">The report card for your AI agents</h1>
+  <p class="hero-sub">Score model outputs against test suites — pass rates, cost,
+  latency, and regressions. Load one run, or compare two to catch what broke.</p>
+</div>""",
+    unsafe_allow_html=True,
 )
 
 # --- Sidebar ---
@@ -141,7 +168,7 @@ with st.sidebar:
     st.caption(RAGAS_METRICS[metric]["description"])
 
     st.divider()
-    st.caption("evalforge — eval-driven agent testing")
+    st.caption("evalforge — eval-driven agent testing · v0.1.0")
 
 if not runs:
     st.warning("No runs loaded. Use the sample data or upload a result JSON.")
@@ -155,10 +182,14 @@ if len(runs) >= 2:
     r1, r2 = runs[v1], runs[v2]
     delta = r2.summary.pass_rate - r1.summary.pass_rate
     direction = "regressed" if delta < 0 else "improved"
-    st.info(
-        f"**{v1} → {v2}:** pass rate {r1.summary.pass_rate:.0%} → "
-        f"{r2.summary.pass_rate:.0%} ({direction} by {abs(delta):.0%}). "
-        f"See the matrix below for which cases moved."
+    tone = "danger" if delta < 0 else "success"
+    st.markdown(
+        f"""<div class="callout {tone}">
+  <span class="callout-label">{v1} → {v2}</span>
+  <span>Pass rate <strong>{r1.summary.pass_rate:.0%} → {r2.summary.pass_rate:.0%}</strong> —
+  {direction} by {abs(delta):.0%}. See the matrix below for which cases moved.</span>
+</div>""",
+        unsafe_allow_html=True,
     )
 
 # --- Single run view ---
@@ -211,10 +242,7 @@ else:
         for name in names:
             run = runs[name]
             match = next((t for t in run.tests if t.id == tid), None)
-            if match is None:
-                row[name] = "—"
-            else:
-                row[name] = match.status
+            row[name] = status_text(match.status) if match else "—"
         matrix_rows.append(row)
     matrix_df = pd.DataFrame(matrix_rows)
 
@@ -251,3 +279,11 @@ else:
                 use_container_width=True,
                 hide_index=True,
             )
+
+st.markdown(
+    """<div class="footer">
+  <span>evalforge v0.1.0 · MIT</span>
+  <span><a href="https://github.com/rayyanakmal/evalforge">GitHub</a> · Streamlit</span>
+</div>""",
+    unsafe_allow_html=True,
+)
