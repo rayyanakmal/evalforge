@@ -22,3 +22,6 @@ venv/
 # Build
 build/
 *.egg/
+
+# Streamlit secrets — never commit
+.streamlit/secrets.toml

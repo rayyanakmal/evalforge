@@ -1,0 +1,128 @@
+/* Deterministic design system for Streamlit demos — spacing scale 4/8/16/24/32,
+   one accent + neutrals, semantic status colors, 2-3 step type scale. */
+
+:root {
+  --accent: #2563EB;
+  --accent-hover: #1D4ED8;
+  --bg: #FFFFFF;
+  --bg-soft: #F8FAFC;
+  --border: #E2E8F0;
+  --text: #0F172A;
+  --text-muted: #64748B;
+  --success: #16A34A;
+  --warn: #D97706;
+  --error: #DC2626;
+  --radius: 10px;
+}
+
+/* Contain content, don't stretch across a 27" screen */
+.stApp {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* Spacing rhythm */
+.main > div {
+  padding: 1.5rem 2rem;
+}
+.block-container {
+  padding-top: 2rem;
+  padding-bottom: 3rem;
+}
+
+/* Typography scale */
+h1 {
+  font-size: 28px !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.02em !important;
+  color: var(--text) !important;
+}
+h2, h3 {
+  font-weight: 600 !important;
+  color: var(--text) !important;
+}
+p, li {
+  color: var(--text-muted) !important;
+  font-size: 14px !important;
+  line-height: 1.6 !important;
+}
+
+/* Metric cards */
+[data-testid="stMetric"] {
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+}
+[data-testid="stMetricLabel"] {
+  color: var(--text-muted) !important;
+  font-size: 12px !important;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+[data-testid="stMetricValue"] {
+  color: var(--text) !important;
+  font-size: 24px !important;
+  font-weight: 700 !important;
+}
+
+/* DataFrames */
+[data-testid="stDataFrame"] {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+/* Chat bubbles */
+.stChatMessage {
+  background: var(--bg-soft) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius) !important;
+  padding: 0.75rem 1rem !important;
+  margin-bottom: 0.75rem !important;
+}
+[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]) {
+  background: var(--bg-soft) !important;
+}
+.stChatInput {
+  border-radius: var(--radius) !important;
+  border-color: var(--border) !important;
+}
+
+/* Buttons — accent, rounded, not default blue glow */
+.stButton > button {
+  background: var(--accent);
+  color: #fff;
+  border-radius: 8px;
+  border: none;
+  padding: 0.5rem 1.25rem;
+  font-weight: 500;
+}
+.stButton > button:hover {
+  background: var(--accent-hover);
+  color: #fff;
+}
+
+/* Sidebar */
+[data-testid="stSidebar"] {
+  background: var(--bg-soft);
+  border-right: 1px solid var(--border);
+}
+[data-testid="stSidebar"] h2 {
+  font-size: 18px !important;
+}
+
+/* Expanders */
+[data-testid="stExpander"] {
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius) !important;
+}
+
+/* Tabs */
+.stTabs [data-baseweb="tab-list"] {
+  gap: 0.5rem;
+}
+.stTabs [data-baseweb="tab"] {
+  border-radius: 8px 8px 0 0;
+  padding: 0.5rem 1rem;
+}
