@@ -12,7 +12,7 @@ import asyncio
 import logging
 import os
 from pathlib import Path
-from typing import Optional
+from typing import Callable, Optional
 
 from evalforge.config import GateConfig, ProviderConfig
 from evalforge.judge.client import LLMClient, create_client
@@ -154,19 +154,26 @@ def run_suite(
     provider: Optional[str],
     model: Optional[str],
     concurrency: int = 10,
+    generate_fn: Optional[Callable] = None,
 ) -> RunResult:
     """Execute a suite against a configured provider, capturing trajectories.
 
     Returns a RunResult whose tests carry trajectories and whose
     trajectory_summary is populated — so the same JSON report feeds both
     `evalforge compare --trajectory` and the dashboard trajectory view.
+
+    generate_fn: optional custom executor generate function. When provided
+    (e.g. a tool-using agent), it replaces the default single-call builder
+    and receives ``(prompt, recorder)`` in capture mode — same contract,
+    richer journeys.
     """
     from evalforge.runner.executor import Executor
     from evalforge.trajectory.metrics import summarize_trajectories
 
     target_client, judge_client = build_clients(config, provider, model)
     scorer = build_scorer(judge_client)
-    generate_fn = build_generate_fn(target_client)
+    if generate_fn is None:
+        generate_fn = build_generate_fn(target_client)
 
     executor = Executor(
         generate_fn=generate_fn,

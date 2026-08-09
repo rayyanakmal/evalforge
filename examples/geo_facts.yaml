@@ -1,0 +1,43 @@
+# geo_facts — geography QA suite for the tool-using agent demo.
+# Questions are chosen so memory-only answers are plausibly WRONG
+# (population figure, Sydney-vs-Canberra, Nile-vs-Amazon, China-vs-India).
+# The agent is expected to verify each fact via the lookup tool.
+#
+# NOTE: the plain `evalforge run` CLI calls the LLM once per test (no tool
+# loop). The tool-using journeys in examples/gen_realistic_samples.py come
+# from the ToolAgent in that script, which runs the same Executor path with
+# a custom generate_fn. Run `python examples/gen_realistic_samples.py` to
+# regenerate the four committed run files.
+
+name: geo_facts
+tests:
+  - id: geo-01
+    prompt: "What is the population of Tokyo, Japan (metropolitan area)?"
+    expected:
+      type: exact
+      value: "37.4 million"
+  - id: geo-02
+    prompt: "What is the capital of Australia?"
+    expected:
+      type: exact
+      value: "Canberra"
+  - id: geo-03
+    prompt: "What is the longest river in the world?"
+    expected:
+      type: exact
+      value: "Nile"
+  - id: geo-04
+    prompt: "What is the most populous country in the world?"
+    expected:
+      type: exact
+      value: "India"
+  - id: geo-05
+    prompt: "What is the world's largest country by land area?"
+    expected:
+      type: exact
+      value: "Russia"
+  - id: geo-06
+    prompt: "What is the official language of Brazil?"
+    expected:
+      type: exact
+      value: "Portuguese"

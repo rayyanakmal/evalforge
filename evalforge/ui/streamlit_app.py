@@ -51,47 +51,30 @@ def load_run(path: str) -> RunResult:
     return RunResult.model_validate(data)
 
 
-def load_default_runs() -> dict[str, RunResult]:
-    """Load the built-in v1/v2 regression sample."""
-    runs = {}
-    for f in ("sample_results_v1.json", "sample_results_v2.json"):
-        p = EXAMPLES / f
-        if p.exists():
-            runs[f.replace("sample_results_", "").replace(".json", "")] = load_run(str(p))
-    return runs
+SAMPLE_PAIRS: dict[str, tuple[str, str]] = {
+    "Sample: same score, more tools": ("geo_baseline.json", "geo_more_tools.json"),
+    "Sample: pass rate regressed": ("geo_baseline.json", "geo_no_tool.json"),
+    "Sample: both regressed": ("geo_baseline.json", "geo_memory_loopy.json"),
+}
 
 
-def load_trajectory_default_runs() -> dict[str, RunResult]:
-    """Load the built-in trajectory demo: clean run A vs loopy run B.
+def load_sample_pair(filenames: tuple[str, str]) -> dict[str, RunResult]:
+    """Load a built-in comparison pair as real RunResult files.
 
-    Imports the committed trajectory files (examples/trajectories_run_*.json)
-    through the same path as evalforge import-trajectory, so the dashboard
-    numbers match the CLI exactly (V5 reproducibility).
+    Uses the exact same load_run path as uploads, so the sample view is
+    identical to what a user sees after uploading two `evalforge run`
+    outputs (answers + trajectories, one file per run).
     """
-    from evalforge.trajectory.importers import load_trajectories_file
-    from evalforge.trajectory.metrics import summarize_trajectories
-    from evalforge.models import TestResult, build_summary_from_tests
-
-    runs = {}
-    for f, label in (("trajectories_run_a.json", "traj A (clean)"),
-                     ("trajectories_run_b.json", "traj B (loopy)")):
+    runs: dict[str, RunResult] = {}
+    for f in filenames:
         p = EXAMPLES / f
         if not p.exists():
+            st.warning(
+                f"Sample file {f} not found. Run examples/gen_realistic_samples.py first."
+            )
             continue
-        trajs = load_trajectories_file(str(p))
-        tests = [
-            TestResult(id=tid, status="pass", response=t.final_answer, trajectory=t)
-            for tid, t in trajs.items()
-        ]
-        report = RunResult(
-            suite_name=label,
-            timestamp="demo",
-            duration_ms=0.0,
-            tests=tests,
-            summary=build_summary_from_tests(tests),
-        )
-        report.trajectory_summary = summarize_trajectories(tests)
-        runs[label] = report
+        r = load_run(str(p))
+        runs[r.suite_name] = r
     return runs
 
 
@@ -277,21 +260,16 @@ with st.sidebar:
     st.title("Controls")
     source = st.radio(
         "Data source",
-        ["Sample (v1 vs v2)", "Sample (trajectory A vs B)", "Upload"],
+        [*SAMPLE_PAIRS.keys(), "Upload"],
         index=0,
     )
 
     runs: dict[str, RunResult] = {}
-    if source == "Sample (v1 vs v2)":
-        runs = load_default_runs()
-        if not runs:
-            st.error("Sample data not found. Run examples/gen_samples.py first.")
-    elif source == "Sample (trajectory A vs B)":
-        runs = load_trajectory_default_runs()
+    if source in SAMPLE_PAIRS:
+        runs = load_sample_pair(SAMPLE_PAIRS[source])
         if not runs:
             st.error(
-                "Trajectory sample not found. Run "
-                "examples/gen_demo_trajectories.py first."
+                "Sample data not found. Run examples/gen_realistic_samples.py first."
             )
     else:
         up = st.file_uploader(

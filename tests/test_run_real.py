@@ -183,3 +183,35 @@ def test_run_suite_json_roundtrip_preserves_trajectory(monkeypatch, tmp_path):
     assert payload["tests"][0]["trajectory"] is not None
     assert payload["tests"][0]["trajectory"]["steps"][0]["tool"] == "llm"
     assert "trajectory_summary" in payload
+
+
+def test_run_suite_accepts_custom_generate_fn(monkeypatch):
+    """A custom generate_fn (e.g. a tool-using agent) replaces the default
+    single-call builder; multi-step journeys are captured and summarized."""
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "sk-test")
+
+    async def generate(prompt, recorder=None):
+        if recorder is not None:
+            recorder.emit(tool="llm", args={}, result="Paris", thought="think")
+            recorder.emit(tool="lookup", args={"query": "france"}, result={"fact": "Paris"})
+        return LLMResponse(
+            content="Paris",
+            usage=Usage(prompt_tokens=5, completion_tokens=2, total_tokens=7),
+            latency_ms=10.0,
+            cost_usd=0.0001,
+        )
+
+    with patch("evalforge.cli.run_real.build_clients") as build:
+        client = _FakeClient()
+        build.return_value = (client, client)
+
+        result = run_suite(
+            _suite(), config=None, provider=None, model=None, generate_fn=generate
+        )
+
+    t = result.tests[0]
+    assert t.status == "pass"
+    assert t.response == "Paris"
+    assert t.trajectory is not None
+    assert [s.tool for s in t.trajectory.steps] == ["llm", "lookup"]
+    assert result.trajectory_summary is not None

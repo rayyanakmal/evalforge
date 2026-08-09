@@ -4,6 +4,33 @@ All notable changes to EvalForge are documented here. Format follows [Keep a Cha
 
 ## [Unreleased] - 2026-08-10
 
+### Added — realistic built-in samples (same format as real runs)
+
+The dashboard's sample data is rebuilt from the ground up. Previously the two
+built-in options were two different file formats (output-only RunResults vs a
+raw trajectory JSON that the app wrapped with fabricated all-pass answers).
+Now all samples are real `evalforge run` outputs — answers AND trajectories,
+one RunResult file per run, loaded through the exact same `load_run` path as
+uploads:
+
+- **Real-run sample generator** (`examples/gen_realistic_samples.py`) — a
+  tool-using geography agent (ReAct-style `TOOL <entity>` / `ANSWER <value>`
+  protocol against a deterministic lookup tool) run against real DeepSeek
+  through the same Executor path as the CLI. `examples/geo_facts.yaml` is the
+  dataset behind it.
+- **Four committed runs** (`examples/geo_*.json`) — `geo_baseline` (6/6,
+  1 tool/test), `geo_more_tools` (6/6, 2 tools/test), `geo_no_tool` (4/6,
+  memory only), `geo_memory_loopy` (5/6, 2 tools + loops).
+- **Three sample pairs in the dashboard** — "same score, more tools",
+  "pass rate regressed", "both regressed" — each varying one behavior via
+  the system prompt (isolation-of-variables), each producing a distinct
+  trajectory-regression verdict.
+- **`run_suite()` accepts a custom `generate_fn`** (`cli/run_real.py`) — a
+  tool-using agent can be wired through the same one-code-path runner, so
+  sample files and user files are produced identically. Default unchanged.
+- Dashboard sample loader errors now name the missing file and the
+  regeneration command.
+
 ### Added — real execution in `evalforge run` (one run, both dimensions)
 
 `evalforge run` previously only supported `--no-llm` dry runs. It now executes

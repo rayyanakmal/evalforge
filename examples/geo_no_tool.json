@@ -1,0 +1,289 @@
+{
+  "suite_name": "geo_no_tool",
+  "timestamp": "2026-08-09T23:55:15.866080+00:00",
+  "duration_ms": 1805.120254997746,
+  "tests": [
+    {
+      "id": "geo-01",
+      "status": "fail",
+      "response": "37.1 million (as of 2023, Greater Tokyo Area)",
+      "expected_value": "37.4 million",
+      "score": {
+        "overall": 0.0,
+        "dimensions": null,
+        "method": "exact"
+      },
+      "tokens": {
+        "input": 57,
+        "output": 17,
+        "total": 74
+      },
+      "latency_ms": 918.6935489997268,
+      "cost_usd": 8.750000000000001e-6,
+      "error": "Expected '37.4 million', got '37.1 million (as of 2023, Greater Tokyo Area)' — no match (score=0.0)",
+      "trajectory": {
+        "steps": [
+          {
+            "index": 0,
+            "tool": "llm",
+            "args": {
+              "model": "deepseek-chat",
+              "turn": 0
+            },
+            "result": "ANSWER 37.1 million (as of 2023, Greater Tokyo Area)",
+            "thought": "ANSWER 37.1 million (as of 2023, Greater Tokyo Area)",
+            "latency_ms": 918.0883470035042,
+            "tokens": {
+              "input": 57,
+              "output": 17,
+              "total": 74
+            },
+            "cost_usd": 8.750000000000001e-6,
+            "error": null
+          }
+        ],
+        "final_answer": "37.1 million (as of 2023, Greater Tokyo Area)"
+      }
+    },
+    {
+      "id": "geo-02",
+      "status": "pass",
+      "response": "Canberra",
+      "expected_value": "Canberra",
+      "score": {
+        "overall": 1.0,
+        "dimensions": null,
+        "method": "exact"
+      },
+      "tokens": {
+        "input": 51,
+        "output": 2,
+        "total": 53
+      },
+      "latency_ms": 643.6895110018668,
+      "cost_usd": 4.13e-6,
+      "error": null,
+      "trajectory": {
+        "steps": [
+          {
+            "index": 0,
+            "tool": "llm",
+            "args": {
+              "model": "deepseek-chat",
+              "turn": 0
+            },
+            "result": "ANSWER Canberra",
+            "thought": "ANSWER Canberra",
+            "latency_ms": 643.4876779967453,
+            "tokens": {
+              "input": 51,
+              "output": 2,
+              "total": 53
+            },
+            "cost_usd": 4.13e-6,
+            "error": null
+          }
+        ],
+        "final_answer": "Canberra"
+      }
+    },
+    {
+      "id": "geo-03",
+      "status": "fail",
+      "response": "Nile River",
+      "expected_value": "Nile",
+      "score": {
+        "overall": 0.0,
+        "dimensions": null,
+        "method": "exact"
+      },
+      "tokens": {
+        "input": 53,
+        "output": 3,
+        "total": 56
+      },
+      "latency_ms": 704.9911049980437,
+      "cost_usd": 4.5500000000000005e-6,
+      "error": "Expected 'Nile', got 'Nile River' — no match (score=0.0)",
+      "trajectory": {
+        "steps": [
+          {
+            "index": 0,
+            "tool": "llm",
+            "args": {
+              "model": "deepseek-chat",
+              "turn": 0
+            },
+            "result": "ANSWER Nile River",
+            "thought": "ANSWER Nile River",
+            "latency_ms": 704.8096619982971,
+            "tokens": {
+              "input": 53,
+              "output": 3,
+              "total": 56
+            },
+            "cost_usd": 4.5500000000000005e-6,
+            "error": null
+          }
+        ],
+        "final_answer": "Nile River"
+      }
+    },
+    {
+      "id": "geo-04",
+      "status": "pass",
+      "response": "India",
+      "expected_value": "India",
+      "score": {
+        "overall": 1.0,
+        "dimensions": null,
+        "method": "exact"
+      },
+      "tokens": {
+        "input": 54,
+        "output": 2,
+        "total": 56
+      },
+      "latency_ms": 716.5776830006507,
+      "cost_usd": 4.34e-6,
+      "error": null,
+      "trajectory": {
+        "steps": [
+          {
+            "index": 0,
+            "tool": "llm",
+            "args": {
+              "model": "deepseek-chat",
+              "turn": 0
+            },
+            "result": "ANSWER India",
+            "thought": "ANSWER India",
+            "latency_ms": 716.431997003383,
+            "tokens": {
+              "input": 54,
+              "output": 2,
+              "total": 56
+            },
+            "cost_usd": 4.34e-6,
+            "error": null
+          }
+        ],
+        "final_answer": "India"
+      }
+    },
+    {
+      "id": "geo-05",
+      "status": "pass",
+      "response": "Russia",
+      "expected_value": "Russia",
+      "score": {
+        "overall": 1.0,
+        "dimensions": null,
+        "method": "exact"
+      },
+      "tokens": {
+        "input": 55,
+        "output": 2,
+        "total": 57
+      },
+      "latency_ms": 627.1385899963207,
+      "cost_usd": 4.41e-6,
+      "error": null,
+      "trajectory": {
+        "steps": [
+          {
+            "index": 0,
+            "tool": "llm",
+            "args": {
+              "model": "deepseek-chat",
+              "turn": 0
+            },
+            "result": "ANSWER Russia",
+            "thought": "ANSWER Russia",
+            "latency_ms": 626.9643679988803,
+            "tokens": {
+              "input": 55,
+              "output": 2,
+              "total": 57
+            },
+            "cost_usd": 4.41e-6,
+            "error": null
+          }
+        ],
+        "final_answer": "Russia"
+      }
+    },
+    {
+      "id": "geo-06",
+      "status": "pass",
+      "response": "Portuguese",
+      "expected_value": "Portuguese",
+      "score": {
+        "overall": 1.0,
+        "dimensions": null,
+        "method": "exact"
+      },
+      "tokens": {
+        "input": 52,
+        "output": 2,
+        "total": 54
+      },
+      "latency_ms": 886.2252249964513,
+      "cost_usd": 4.2000000000000004e-6,
+      "error": null,
+      "trajectory": {
+        "steps": [
+          {
+            "index": 0,
+            "tool": "llm",
+            "args": {
+              "model": "deepseek-chat",
+              "turn": 0
+            },
+            "result": "ANSWER Portuguese",
+            "thought": "ANSWER Portuguese",
+            "latency_ms": 886.0596879967488,
+            "tokens": {
+              "input": 52,
+              "output": 2,
+              "total": 54
+            },
+            "cost_usd": 4.2000000000000004e-6,
+            "error": null
+          }
+        ],
+        "final_answer": "Portuguese"
+      }
+    }
+  ],
+  "summary": {
+    "total": 6,
+    "passed": 4,
+    "failed": 2,
+    "errored": 0,
+    "pass_rate": 0.6666666666666666,
+    "total_cost_usd": 0.00003038,
+    "avg_latency_ms": 749.5526104988434,
+    "latency_p50": 710.7843939993472,
+    "latency_p95": 910.5764679989079,
+    "latency_p99": 917.070132799563
+  },
+  "trajectory_summary": {
+    "mean_steps": 1.0,
+    "mean_tool_calls": 0.0,
+    "total_loops": 0,
+    "total_error_steps": 0,
+    "per_tool": {
+      "llm": {
+        "calls": 6,
+        "errors": 0,
+        "total_latency_ms": 4495.841739997559,
+        "total_cost_usd": 0.00003038,
+        "error_rate": 0.0
+      }
+    },
+    "pass_rate_by_tool_usage": {
+      "llm": 0.6666666666666666
+    }
+  }
+}

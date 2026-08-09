@@ -1,0 +1,645 @@
+{
+  "suite_name": "geo_memory_loopy",
+  "timestamp": "2026-08-09T23:57:06.849550+00:00",
+  "duration_ms": 4669.486533995951,
+  "tests": [
+    {
+      "id": "geo-01",
+      "status": "fail",
+      "response": "The population of the Greater Tokyo metropolitan area is approximately 37 million people (around 37.4 million as of recent estimates)",
+      "expected_value": "37.4 million",
+      "score": {
+        "overall": 0.0,
+        "dimensions": null,
+        "method": "exact"
+      },
+      "tokens": {
+        "input": 531,
+        "output": 33,
+        "total": 564
+      },
+      "latency_ms": 2675.381244000164,
+      "cost_usd": 0.00004641,
+      "error": "Expected '37.4 million', got 'The population of the Greater Tokyo metropolitan area is approximately 37 million people (around 37.4 million as of recent estimates)' — no match (score=0.0)",
+      "trajectory": {
+        "steps": [
+          {
+            "index": 0,
+            "tool": "llm",
+            "args": {
+              "model": "deepseek-chat",
+              "turn": 0
+            },
+            "result": "TOOL Tokyo",
+            "thought": "TOOL Tokyo",
+            "latency_ms": 836.2034890014911,
+            "tokens": {
+              "input": 146,
+              "output": 3,
+              "total": 149
+            },
+            "cost_usd": 0.00001106,
+            "error": null
+          },
+          {
+            "index": 1,
+            "tool": "lookup",
+            "args": {
+              "query": "Tokyo"
+            },
+            "result": {
+              "query": "Tokyo",
+              "fact": "37.4 million",
+              "entity": "Tokyo"
+            },
+            "thought": null,
+            "latency_ms": 0.0,
+            "tokens": null,
+            "cost_usd": 0.0,
+            "error": null
+          },
+          {
+            "index": 2,
+            "tool": "llm",
+            "args": {
+              "model": "deepseek-chat",
+              "turn": 1
+            },
+            "result": "TOOL Tokyo",
+            "thought": "TOOL Tokyo",
+            "latency_ms": 643.3910749983625,
+            "tokens": {
+              "input": 177,
+              "output": 3,
+              "total": 180
+            },
+            "cost_usd": 0.00001323,
+            "error": null
+          },
+          {
+            "index": 3,
+            "tool": "lookup",
+            "args": {
+              "query": "Tokyo"
+            },
+            "result": {
+              "query": "Tokyo",
+              "fact": "37.4 million",
+              "entity": "Tokyo"
+            },
+            "thought": null,
+            "latency_ms": 0.0,
+            "tokens": null,
+            "cost_usd": 0.0,
+            "error": null
+          },
+          {
+            "index": 4,
+            "tool": "llm",
+            "args": {
+              "model": "deepseek-chat",
+              "turn": 2
+            },
+            "result": "ANSWER The population of the Greater Tokyo metropolitan area is approximately 37 million people (around 37.4 million as of recent estimates).",
+            "thought": "ANSWER The population of the Greater Tokyo metropolitan area is approximately 37 million people (around 37.4 million as of recent estimates).",
+            "latency_ms": 1195.2713130012853,
+            "tokens": {
+              "input": 208,
+              "output": 27,
+              "total": 235
+            },
+            "cost_usd": 0.00002212,
+            "error": null
+          }
+        ],
+        "final_answer": "The population of the Greater Tokyo metropolitan area is approximately 37 million people (around 37.4 million as of recent estimates)"
+      }
+    },
+    {
+      "id": "geo-02",
+      "status": "pass",
+      "response": "Canberra",
+      "expected_value": "Canberra",
+      "score": {
+        "overall": 1.0,
+        "dimensions": null,
+        "method": "exact"
+      },
+      "tokens": {
+        "input": 140,
+        "output": 10,
+        "total": 150
+      },
+      "latency_ms": 748.220070003299,
+      "cost_usd": 0.0000126,
+      "error": null,
+      "trajectory": {
+        "steps": [
+          {
+            "index": 0,
+            "tool": "llm",
+            "args": {
+              "model": "deepseek-chat",
+              "turn": 0
+            },
+            "result": "TOOL Australia\nTOOL Australia\nANSWER Canberra",
+            "thought": "TOOL Australia\nTOOL Australia\nANSWER Canberra",
+            "latency_ms": 747.9687939994619,
+            "tokens": {
+              "input": 140,
+              "output": 10,
+              "total": 150
+            },
+            "cost_usd": 0.0000126,
+            "error": null
+          },
+          {
+            "index": 1,
+            "tool": "lookup",
+            "args": {
+              "query": "Australia"
+            },
+            "result": {
+              "query": "Australia",
+              "fact": "Canberra",
+              "entity": "Australia"
+            },
+            "thought": null,
+            "latency_ms": 0.0,
+            "tokens": null,
+            "cost_usd": 0.0,
+            "error": null
+          },
+          {
+            "index": 2,
+            "tool": "lookup",
+            "args": {
+              "query": "Australia"
+            },
+            "result": {
+              "query": "Australia",
+              "fact": "Canberra",
+              "entity": "Australia"
+            },
+            "thought": null,
+            "latency_ms": 0.0,
+            "tokens": null,
+            "cost_usd": 0.0,
+            "error": null
+          }
+        ],
+        "final_answer": "Canberra"
+      }
+    },
+    {
+      "id": "geo-03",
+      "status": "pass",
+      "response": "Nile",
+      "expected_value": "Nile",
+      "score": {
+        "overall": 1.0,
+        "dimensions": null,
+        "method": "exact"
+      },
+      "tokens": {
+        "input": 142,
+        "output": 10,
+        "total": 152
+      },
+      "latency_ms": 592.1384289977141,
+      "cost_usd": 0.000012740000000000002,
+      "error": null,
+      "trajectory": {
+        "steps": [
+          {
+            "index": 0,
+            "tool": "llm",
+            "args": {
+              "model": "deepseek-chat",
+              "turn": 0
+            },
+            "result": "TOOL Nile\nTOOL Nile\nANSWER Nile",
+            "thought": "TOOL Nile\nTOOL Nile\nANSWER Nile",
+            "latency_ms": 591.8670780010871,
+            "tokens": {
+              "input": 142,
+              "output": 10,
+              "total": 152
+            },
+            "cost_usd": 0.000012740000000000002,
+            "error": null
+          },
+          {
+            "index": 1,
+            "tool": "lookup",
+            "args": {
+              "query": "Nile"
+            },
+            "result": {
+              "query": "Nile",
+              "fact": "Nile",
+              "entity": "Nile"
+            },
+            "thought": null,
+            "latency_ms": 0.0,
+            "tokens": null,
+            "cost_usd": 0.0,
+            "error": null
+          },
+          {
+            "index": 2,
+            "tool": "lookup",
+            "args": {
+              "query": "Nile"
+            },
+            "result": {
+              "query": "Nile",
+              "fact": "Nile",
+              "entity": "Nile"
+            },
+            "thought": null,
+            "latency_ms": 0.0,
+            "tokens": null,
+            "cost_usd": 0.0,
+            "error": null
+          }
+        ],
+        "final_answer": "Nile"
+      }
+    },
+    {
+      "id": "geo-04",
+      "status": "pass",
+      "response": "India",
+      "expected_value": "India",
+      "score": {
+        "overall": 1.0,
+        "dimensions": null,
+        "method": "exact"
+      },
+      "tokens": {
+        "input": 513,
+        "output": 8,
+        "total": 521
+      },
+      "latency_ms": 2137.877932997071,
+      "cost_usd": 0.000038150000000000006,
+      "error": null,
+      "trajectory": {
+        "steps": [
+          {
+            "index": 0,
+            "tool": "llm",
+            "args": {
+              "model": "deepseek-chat",
+              "turn": 0
+            },
+            "result": "TOOL India",
+            "thought": "TOOL India",
+            "latency_ms": 528.0386349986657,
+            "tokens": {
+              "input": 143,
+              "output": 3,
+              "total": 146
+            },
+            "cost_usd": 0.000010850000000000001,
+            "error": null
+          },
+          {
+            "index": 1,
+            "tool": "lookup",
+            "args": {
+              "query": "India"
+            },
+            "result": {
+              "query": "India",
+              "fact": "India",
+              "entity": "India"
+            },
+            "thought": null,
+            "latency_ms": 0.0,
+            "tokens": null,
+            "cost_usd": 0.0,
+            "error": null
+          },
+          {
+            "index": 2,
+            "tool": "llm",
+            "args": {
+              "model": "deepseek-chat",
+              "turn": 1
+            },
+            "result": "TOOL India",
+            "thought": "TOOL India",
+            "latency_ms": 782.9014719973202,
+            "tokens": {
+              "input": 171,
+              "output": 3,
+              "total": 174
+            },
+            "cost_usd": 0.000012810000000000003,
+            "error": null
+          },
+          {
+            "index": 3,
+            "tool": "lookup",
+            "args": {
+              "query": "India"
+            },
+            "result": {
+              "query": "India",
+              "fact": "India",
+              "entity": "India"
+            },
+            "thought": null,
+            "latency_ms": 0.0,
+            "tokens": null,
+            "cost_usd": 0.0,
+            "error": null
+          },
+          {
+            "index": 4,
+            "tool": "llm",
+            "args": {
+              "model": "deepseek-chat",
+              "turn": 2
+            },
+            "result": "ANSWER India",
+            "thought": "ANSWER India",
+            "latency_ms": 826.448548999906,
+            "tokens": {
+              "input": 199,
+              "output": 2,
+              "total": 201
+            },
+            "cost_usd": 0.000014490000000000002,
+            "error": null
+          }
+        ],
+        "final_answer": "India"
+      }
+    },
+    {
+      "id": "geo-05",
+      "status": "pass",
+      "response": "Russia",
+      "expected_value": "Russia",
+      "score": {
+        "overall": 1.0,
+        "dimensions": null,
+        "method": "exact"
+      },
+      "tokens": {
+        "input": 516,
+        "output": 8,
+        "total": 524
+      },
+      "latency_ms": 2241.7917769998894,
+      "cost_usd": 0.000038360000000000005,
+      "error": null,
+      "trajectory": {
+        "steps": [
+          {
+            "index": 0,
+            "tool": "llm",
+            "args": {
+              "model": "deepseek-chat",
+              "turn": 0
+            },
+            "result": "TOOL Russia",
+            "thought": "TOOL Russia",
+            "latency_ms": 877.9553490021499,
+            "tokens": {
+              "input": 144,
+              "output": 3,
+              "total": 147
+            },
+            "cost_usd": 0.000010920000000000002,
+            "error": null
+          },
+          {
+            "index": 1,
+            "tool": "lookup",
+            "args": {
+              "query": "Russia"
+            },
+            "result": {
+              "query": "Russia",
+              "fact": "Russia",
+              "entity": "Russia"
+            },
+            "thought": null,
+            "latency_ms": 0.0,
+            "tokens": null,
+            "cost_usd": 0.0,
+            "error": null
+          },
+          {
+            "index": 2,
+            "tool": "llm",
+            "args": {
+              "model": "deepseek-chat",
+              "turn": 1
+            },
+            "result": "TOOL Russia",
+            "thought": "TOOL Russia",
+            "latency_ms": 643.0955730029382,
+            "tokens": {
+              "input": 172,
+              "output": 3,
+              "total": 175
+            },
+            "cost_usd": 0.000012880000000000002,
+            "error": null
+          },
+          {
+            "index": 3,
+            "tool": "lookup",
+            "args": {
+              "query": "Russia"
+            },
+            "result": {
+              "query": "Russia",
+              "fact": "Russia",
+              "entity": "Russia"
+            },
+            "thought": null,
+            "latency_ms": 0.0,
+            "tokens": null,
+            "cost_usd": 0.0,
+            "error": null
+          },
+          {
+            "index": 4,
+            "tool": "llm",
+            "args": {
+              "model": "deepseek-chat",
+              "turn": 2
+            },
+            "result": "ANSWER Russia",
+            "thought": "ANSWER Russia",
+            "latency_ms": 720.2485610032454,
+            "tokens": {
+              "input": 200,
+              "output": 2,
+              "total": 202
+            },
+            "cost_usd": 0.000014560000000000001,
+            "error": null
+          }
+        ],
+        "final_answer": "Russia"
+      }
+    },
+    {
+      "id": "geo-06",
+      "status": "pass",
+      "response": "Portuguese",
+      "expected_value": "Portuguese",
+      "score": {
+        "overall": 1.0,
+        "dimensions": null,
+        "method": "exact"
+      },
+      "tokens": {
+        "input": 507,
+        "output": 8,
+        "total": 515
+      },
+      "latency_ms": 1993.3932550047757,
+      "cost_usd": 0.000037730000000000006,
+      "error": null,
+      "trajectory": {
+        "steps": [
+          {
+            "index": 0,
+            "tool": "llm",
+            "args": {
+              "model": "deepseek-chat",
+              "turn": 0
+            },
+            "result": "TOOL Brazil",
+            "thought": "TOOL Brazil",
+            "latency_ms": 540.3363310033455,
+            "tokens": {
+              "input": 141,
+              "output": 3,
+              "total": 144
+            },
+            "cost_usd": 0.000010710000000000002,
+            "error": null
+          },
+          {
+            "index": 1,
+            "tool": "lookup",
+            "args": {
+              "query": "Brazil"
+            },
+            "result": {
+              "query": "Brazil",
+              "fact": "Portuguese",
+              "entity": "Brazil"
+            },
+            "thought": null,
+            "latency_ms": 0.0,
+            "tokens": null,
+            "cost_usd": 0.0,
+            "error": null
+          },
+          {
+            "index": 2,
+            "tool": "llm",
+            "args": {
+              "model": "deepseek-chat",
+              "turn": 1
+            },
+            "result": "TOOL Brazil",
+            "thought": "TOOL Brazil",
+            "latency_ms": 765.4409660026431,
+            "tokens": {
+              "input": 169,
+              "output": 3,
+              "total": 172
+            },
+            "cost_usd": 0.00001267,
+            "error": null
+          },
+          {
+            "index": 3,
+            "tool": "lookup",
+            "args": {
+              "query": "Brazil"
+            },
+            "result": {
+              "query": "Brazil",
+              "fact": "Portuguese",
+              "entity": "Brazil"
+            },
+            "thought": null,
+            "latency_ms": 0.0,
+            "tokens": null,
+            "cost_usd": 0.0,
+            "error": null
+          },
+          {
+            "index": 4,
+            "tool": "llm",
+            "args": {
+              "model": "deepseek-chat",
+              "turn": 2
+            },
+            "result": "ANSWER Portuguese",
+            "thought": "ANSWER Portuguese",
+            "latency_ms": 687.0062189991586,
+            "tokens": {
+              "input": 197,
+              "output": 2,
+              "total": 199
+            },
+            "cost_usd": 0.00001435,
+            "error": null
+          }
+        ],
+        "final_answer": "Portuguese"
+      }
+    }
+  ],
+  "summary": {
+    "total": 6,
+    "passed": 5,
+    "failed": 1,
+    "errored": 0,
+    "pass_rate": 0.8333333333333334,
+    "total_cost_usd": 0.00018599,
+    "avg_latency_ms": 1731.4671180004855,
+    "latency_p50": 2065.6355940009234,
+    "latency_p95": 2566.9838772500952,
+    "latency_p99": 2653.70177065015
+  },
+  "trajectory_summary": {
+    "mean_steps": 4.333333333333333,
+    "mean_tool_calls": 2.0,
+    "total_loops": 6,
+    "total_error_steps": 0,
+    "per_tool": {
+      "llm": {
+        "calls": 14,
+        "errors": 0,
+        "total_latency_ms": 10386.17340401106,
+        "total_cost_usd": 0.00018599,
+        "error_rate": 0.0
+      },
+      "lookup": {
+        "calls": 12,
+        "errors": 0,
+        "total_latency_ms": 0.0,
+        "total_cost_usd": 0.0,
+        "error_rate": 0.0
+      }
+    },
+    "pass_rate_by_tool_usage": {
+      "llm": 0.8333333333333334,
+      "lookup": 0.8333333333333334
+    }
+  }
+}
