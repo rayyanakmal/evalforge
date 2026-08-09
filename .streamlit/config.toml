@@ -10,7 +10,7 @@ showWidgetBorder = true
 
 [client]
 toolbarMode = "minimal"
-showSidebarNavigation = false
+showSidebarNavigation = true
 
 [server]
 headless = true
