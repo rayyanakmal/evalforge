@@ -220,6 +220,12 @@ strong { color: var(--text); }
   background: var(--bg-soft);
   border-right: 1px solid var(--border);
 }
+/* Streamlit 1.61+ hides the collapse chevron until hover — force it visible */
+[data-testid="stSidebarCollapseButton"],
+[data-testid="stSidebarCollapseButton"] button {
+  visibility: visible !important;
+  opacity: 1 !important;
+}
 [data-testid="stSidebar"] h1 {
   font-family: var(--font-display);
   font-size: 18px !important;
