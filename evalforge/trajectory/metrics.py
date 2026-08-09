@@ -50,7 +50,12 @@ def compute_efficiency(trajectory: Trajectory) -> dict:
     current_run = 0
     prev_key: Optional[tuple[str, str]] = None
 
+    # Loop detection covers TOOL calls only — llm steps are the agent's
+    # thoughts between calls, and repeating an llm step is expected in a
+    # ReAct loop (the model is consulted after every tool result).
     for s in steps:
+        if s.tool == _LLM_TOOL:
+            continue
         key = (s.tool, _stable_args(s.args))
         if prev_key is not None and key == prev_key:
             current_run += 1

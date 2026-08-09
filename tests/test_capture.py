@@ -123,6 +123,30 @@ class TestImporters:
         assert t.steps[0].tool == "search"
         assert t.steps[1].tool == "calc"
 
+    def test_import_preserves_tokens_and_cost(self, tmp_path):
+        """cost_usd and tokens must survive the import round-trip (P5 bug)."""
+        payload = {
+            "steps": [
+                {"index": 0, "tool": "llm", "args": {"model": "deepseek"},
+                 "result": "x", "cost_usd": 0.000262,
+                 "tokens": {"input": 119, "output": 16, "total": 135}},
+                {"index": 1, "tool": "search", "args": {"q": "a"},
+                 "cost_usd": 0.0},
+            ],
+            "final_answer": "ok",
+        }
+        p = tmp_path / "traj.json"
+        p.write_text(json.dumps(payload))
+        t = load_trajectory_json(str(p))
+        llm_step = t.steps[0]
+        assert llm_step.cost_usd == 0.000262
+        assert llm_step.tokens is not None
+        assert llm_step.tokens.input == 119
+        assert llm_step.tokens.output == 16
+        assert llm_step.tokens.total == 135
+        assert t.steps[1].cost_usd == 0.0
+        assert t.steps[1].tokens is None
+
     def test_bad_order_raises_friendly_error(self, tmp_path):
         payload = {
             "steps": [

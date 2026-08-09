@@ -864,8 +864,8 @@ class TestCLIImportTrajectory:
         data = json.loads(out_path.read_text())
         assert data["suite_name"] == "demo"
         assert data["tests"][0]["trajectory"]["steps"][0]["tool"] == "search"
-        assert data["trajectory_summary"]["convergence"]["converged"] is True
-        assert data["trajectory_summary"]["efficiency"]["steps"] == 2
+        assert data["trajectory_summary"]["mean_steps"] == 2
+        assert data["trajectory_summary"]["total_loops"] == 0
 
     def test_import_trajectory_markdown(self, runner, tmp_path):
         """--out report.md produces markdown with per-tool table."""
@@ -909,7 +909,6 @@ class TestCLIImportTrajectory:
         validity = data["trajectory_summary"]["validity"]
         assert validity["invalid_calls"] == 1
         assert validity["invalid_tool_names"] == ["mystery_tool"]
-
     def test_import_trajectory_missing_file(self, runner, tmp_path):
         """Missing trajectory file errors cleanly with exit 1."""
         result = runner.invoke(
@@ -918,6 +917,28 @@ class TestCLIImportTrajectory:
         )
         assert result.exit_code == 1
         assert "not found" in result.output.lower()
+
+    def test_import_trajectory_map_multi_test(self, runner, tmp_path):
+        """A per-test-id map import produces a multi-test report."""
+        traj_path = tmp_path / "runs.json"
+        traj_path.write_text(json.dumps({
+            "t1": {"steps": [{"index": 0, "tool": "search", "args": {"q": "a"}}],
+                   "final_answer": "ok"},
+            "t2": {"steps": [{"index": 0, "tool": "search", "args": {"q": "a"}},
+                             {"index": 1, "tool": "search", "args": {"q": "a"}}],
+                   "final_answer": "ok"},
+        }), encoding="utf-8")
+        out_path = tmp_path / "report.json"
+
+        result = runner.invoke(
+            _get_app(),
+            ["import-trajectory", str(traj_path), "--out", str(out_path)],
+        )
+        assert result.exit_code == 0
+        data = json.loads(out_path.read_text())
+        assert len(data["tests"]) == 2
+        assert data["trajectory_summary"]["mean_steps"] == 1.5
+        assert data["trajectory_summary"]["total_loops"] == 1
 
 
 # ---------------------------------------------------------------------------

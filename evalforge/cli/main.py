@@ -378,14 +378,19 @@ def import_trajectory(
 
     The A fallback path (D3): sealed-box agents with no hooks export
     their trace; evalforge grades it. Accepts our own JSON format,
-    OTel-style spans, or minimal JSONL.
+    OTel-style spans, minimal JSONL, or a per-test-id map of
+    trajectories (a full run export).
 
     Examples:
         evalforge import-trajectory trajectory.json --out report.json
+        evalforge import-trajectory run_a.json --out run_a_report.json
         evalforge import-trajectory trajectory.json --out report.md --allowed-tools search,calculator
     """
     from evalforge.models import TestResult, Trajectory
-    from evalforge.trajectory.importers import load_trajectory_json
+    from evalforge.trajectory.importers import (
+        load_trajectories_file,
+        load_trajectory_json,
+    )
     from evalforge.trajectory.metrics import (
         compute_budget,
         compute_convergence,
@@ -393,40 +398,65 @@ def import_trajectory(
         compute_recovery,
         compute_tool_stats,
         compute_validity,
+        summarize_trajectories,
     )
 
+    allowed = {t.strip() for t in allowed_tools.split(",")} if allowed_tools else None
+
     try:
-        traj: Trajectory = load_trajectory_json(path)
+        # Detect shape: a per-test map of trajectories, or a single trajectory.
+        raw = json.loads(Path(path).read_text(encoding="utf-8"))
+        is_map = (
+            isinstance(raw, dict)
+            and bool(raw)
+            and all(isinstance(v, dict) and "steps" in v for v in raw.values())
+        )
+    except (ValueError, json.JSONDecodeError) as e:
+        typer.echo(f"Error: {e}", err=True)
+        raise typer.Exit(code=1)
+    except FileNotFoundError:
+        typer.echo(f"Error: trajectory file not found: {path}", err=True)
+        raise typer.Exit(code=1)
+
+    try:
+        if is_map:
+            trajs = load_trajectories_file(path)
+            tests = [
+                TestResult(
+                    id=tid,
+                    status="pass" if compute_convergence(t)["converged"] else "fail",
+                    response=t.final_answer,
+                    trajectory=t,
+                )
+                for tid, t in trajs.items()
+            ]
+            summary = summarize_trajectories(tests)
+        else:
+            traj: Trajectory = load_trajectory_json(path)
+            test = TestResult(
+                id="imported",
+                status="pass" if compute_convergence(traj)["converged"] else "fail",
+                response=traj.final_answer,
+                trajectory=traj,
+            )
+            tests = [test]
+            summary = summarize_trajectories(tests)
     except ValueError as e:
         typer.echo(f"Error: {e}", err=True)
         raise typer.Exit(code=1)
 
-    allowed = {t.strip() for t in allowed_tools.split(",")} if allowed_tools else None
-
-    # Build a single-test RunResult so reporters/UI can consume it uniformly
-    test = TestResult(
-        id="imported",
-        status="pass" if compute_convergence(traj)["converged"] else "fail",
-        response=traj.final_answer,
-        trajectory=traj,
-    )
     report = RunResult(
         suite_name=suite_name,
         timestamp=datetime.now(timezone.utc).isoformat(),
         duration_ms=0.0,
-        tests=[test],
+        tests=tests,
     )
 
-    # Process metrics section
-    metrics = {
-        "convergence": compute_convergence(traj),
-        "efficiency": compute_efficiency(traj),
-        "tool_stats": compute_tool_stats(traj),
-        "validity": compute_validity(traj, allowed),
-        "recovery": compute_recovery(traj),
-        "budget": compute_budget(traj),
-    }
-    report.trajectory_summary = metrics
+    # Process metrics section — always the summarize_trajectories shape so
+    # UI/regression consume one schema. Run-level validity folded in when
+    # --allowed-tools is provided.
+    summary["validity"] = _run_validity(tests, allowed)
+    report.trajectory_summary = summary
 
     out_path = Path(out)
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -435,10 +465,26 @@ def import_trajectory(
     else:
         out_path.write_text(report.model_dump_json(indent=2), encoding="utf-8")
 
-    typer.echo(f"Imported trajectory from {path}")
-    typer.echo(f"  Steps: {metrics['efficiency']['steps']}, "
-              f"converged: {metrics['convergence']['converged']}")
+    typer.echo(f"Imported {len(tests)} trajectory test(s) from {path}")
+    typer.echo(f"  Mean steps: {summary['mean_steps']:.2f}, "
+              f"total loops: {summary['total_loops']}")
     typer.echo(f"  Report written to {out_path}")
+
+
+def _run_validity(tests, allowed_tools) -> Optional[dict]:
+    """Aggregate validity across a run's tests; None when no allowed set."""
+    if allowed_tools is None:
+        return None
+    invalid: set[str] = set()
+    count = 0
+    for t in tests:
+        if t.trajectory is None:
+            continue
+        for s in t.trajectory.steps:
+            if s.tool not in allowed_tools:
+                count += 1
+                invalid.add(s.tool)
+    return {"invalid_calls": count, "invalid_tool_names": sorted(invalid)}
 
 
 def _trajectory_markdown(report: RunResult) -> str:
@@ -449,23 +495,21 @@ def _trajectory_markdown(report: RunResult) -> str:
         "",
         f"- Suite: {report.suite_name}",
         f"- Timestamp: {report.timestamp}",
+        f"- Tests: {len(report.tests)}",
         "",
         "## Process metrics",
         "",
     ]
-    conv = m.get("convergence") or {}
-    eff = m.get("efficiency") or {}
-    lines.append(f"- Converged: {conv.get('converged')} "
-                 f"(terminal: {conv.get('terminal_reason')})")
-    lines.append(f"- Steps: {eff.get('steps')} | Tool calls: {eff.get('tool_calls')} "
-                 f"| Repeated calls: {eff.get('repeated_calls')}")
-    stats = m.get("tool_stats") or {}
+    lines.append(f"- Mean steps: {m.get('mean_steps', 0.0):.2f}")
+    lines.append(f"- Mean tool calls: {m.get('mean_tool_calls', 0.0):.2f}")
+    lines.append(f"- Total loops (repeated calls): {m.get('total_loops', 0)}")
+    lines.append(f"- Total error steps: {m.get('total_error_steps', 0)}")
     lines.append("")
     lines.append("## Per-tool")
     lines.append("")
     lines.append("| Tool | Calls | Errors | Latency (ms) | Cost (USD) | Error rate |")
     lines.append("|------|-------|--------|---------------|------------|------------|")
-    for tool, e in (stats.get("per_tool") or {}).items():
+    for tool, e in (m.get("per_tool") or {}).items():
         lines.append(
             f"| {tool} | {e['calls']} | {e['errors']} | "
             f"{e['total_latency_ms']:.1f} | {e['total_cost_usd']:.4f} | "

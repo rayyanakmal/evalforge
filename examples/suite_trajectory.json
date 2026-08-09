@@ -1,0 +1,36 @@
+{
+  "name": "hk-islands-facts",
+  "description": "Small public suite for the trajectory demo: each question needs a search lookup and/or arithmetic, so a tool-using agent has a real journey to record.",
+  "tests": [
+    {
+      "id": "t01",
+      "prompt": "What is the total population of Hong Kong Island and Lantau combined? Use the search tool to find each population, then the calculator tool to sum them.",
+      "expected": {"type": "exact", "value": "1470000"}
+    },
+    {
+      "id": "t02",
+      "prompt": "What is the area of Hong Kong Island, doubled? Find the area with search, then double it with the calculator.",
+      "expected": {"type": "exact", "value": "156"}
+    },
+    {
+      "id": "t03",
+      "prompt": "Sum the populations of the three largest Hong Kong islands by area. Use search to find all three populations, then add them with the calculator.",
+      "expected": {"type": "exact", "value": "1476000"}
+    },
+    {
+      "id": "t04",
+      "prompt": "What is 15 percent of the population of Lantau? Find the population with search, then compute 15% with the calculator.",
+      "expected": {"type": "exact", "value": "30000"}
+    },
+    {
+      "id": "t05",
+      "prompt": "How much larger is Lantau than Hong Kong Island by area? Use search to find both areas, then subtract with the calculator.",
+      "expected": {"type": "exact", "value": "69"}
+    },
+    {
+      "id": "t06",
+      "prompt": "What is the average population of Hong Kong Island and Lantau? Use search for both populations, then compute the average with the calculator.",
+      "expected": {"type": "exact", "value": "735000"}
+    }
+  ]
+}

@@ -13,7 +13,7 @@ import json
 from pathlib import Path
 from typing import Optional
 
-from evalforge.models import Trajectory, TrajectoryStep
+from evalforge.models import TokenCount, Trajectory, TrajectoryStep
 
 
 def load_trajectory_json(path: str) -> Trajectory:
@@ -102,6 +102,14 @@ def _coerce_step(obj: dict, index: int) -> TrajectoryStep:
     if "index" in obj and obj.get("index") != index:
         # keep the original index; Trajectory validator will catch ordering
         index = obj["index"]
+    tokens = None
+    tok = obj.get("tokens")
+    if isinstance(tok, dict):
+        tokens = TokenCount(
+            input=tok.get("input", 0),
+            output=tok.get("output", 0),
+            total=tok.get("total") or (tok.get("input", 0) + tok.get("output", 0)),
+        )
     return TrajectoryStep(
         index=index,
         tool=str(obj.get("tool", "unknown")),
@@ -109,5 +117,7 @@ def _coerce_step(obj: dict, index: int) -> TrajectoryStep:
         result=obj.get("result"),
         thought=obj.get("thought"),
         latency_ms=float(obj.get("latency_ms") or obj.get("duration_ms") or 0.0),
+        tokens=tokens,
+        cost_usd=float(obj.get("cost_usd") or 0.0),
         error=obj.get("error"),
     )
