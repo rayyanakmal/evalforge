@@ -725,6 +725,202 @@ class TestCLIGate:
 
 
 # ---------------------------------------------------------------------------
+# US-T3: trajectory regression in CLI
+# ---------------------------------------------------------------------------
+
+def _traj_run_result(suite_name, test_trajs):
+    """Build a RunResult with trajectories from {test_id: Trajectory}."""
+    from evalforge.models import Trajectory
+    tests = [
+        TestResult(id=tid, status="pass", trajectory=traj)
+        for tid, traj in test_trajs.items()
+    ]
+    return RunResult(
+        suite_name=suite_name,
+        timestamp=datetime.now(timezone.utc).isoformat(),
+        duration_ms=1.0,
+        tests=tests,
+        summary=Summary(total=len(tests), passed=len(tests), failed=0,
+                        errored=0, pass_rate=1.0, total_cost_usd=0.0,
+                        avg_latency_ms=0.0, latency_p50=None,
+                        latency_p95=None, latency_p99=None),
+    )
+
+
+def _write_json(tmpdir, name, result):
+    p = Path(tmpdir) / name
+    p.write_text(result.model_dump_json(indent=2), encoding="utf-8")
+    return str(p)
+
+
+class TestCLITrajectoryCompare:
+    def test_compare_trajectory_flag_prints_block(self, runner, tmp_path):
+        """evalforge compare --trajectory prints the regression block."""
+        from evalforge.models import Trajectory, TrajectoryStep
+        t = Trajectory(steps=[TrajectoryStep(index=0, tool="search")],
+                       final_answer="x")
+        base = _traj_run_result("base", {"t1": t})
+        # candidate loops: same pass, more steps
+        cand = _traj_run_result("cand", {
+            "t1": Trajectory(
+                steps=[TrajectoryStep(index=0, tool="search"),
+                       TrajectoryStep(index=1, tool="search")],
+                final_answer="x"),
+        })
+        base_path = _write_json(tmp_path, "base.json", base)
+        cand_path = _write_json(tmp_path, "cand.json", cand)
+
+        result = runner.invoke(
+            _get_app(),
+            ["compare", base_path, cand_path, "--trajectory"],
+        )
+        assert result.exit_code == 0
+        assert "TRAJECTORY REGRESSION" in result.output.upper()
+        assert "REGRESSED" in result.output.upper()
+
+    def test_fail_on_trajectory_regression_exits_1(self, runner, tmp_path):
+        """--fail-on-trajectory-regression exits 1 when verdict is REGRESSED."""
+        from evalforge.models import Trajectory, TrajectoryStep
+        t = Trajectory(steps=[TrajectoryStep(index=0, tool="search")],
+                       final_answer="x")
+        base = _traj_run_result("base", {"t1": t})
+        cand = _traj_run_result("cand", {
+            "t1": Trajectory(
+                steps=[TrajectoryStep(index=0, tool="search"),
+                       TrajectoryStep(index=1, tool="search")],
+                final_answer="x"),
+        })
+        base_path = _write_json(tmp_path, "base.json", base)
+        cand_path = _write_json(tmp_path, "cand.json", cand)
+
+        result = runner.invoke(
+            _get_app(),
+            ["compare", base_path, cand_path,
+             "--trajectory", "--fail-on-trajectory-regression"],
+        )
+        assert result.exit_code == 1
+        assert "regression" in result.output.lower()
+
+    def test_fail_on_trajectory_regression_passes_when_clean(self, runner, tmp_path):
+        """Clean candidate (same trajectory) exits 0."""
+        from evalforge.models import Trajectory, TrajectoryStep
+        t = Trajectory(steps=[TrajectoryStep(index=0, tool="search")],
+                       final_answer="x")
+        base = _traj_run_result("base", {"t1": t})
+        cand = _traj_run_result("cand", {"t1": t})
+        base_path = _write_json(tmp_path, "base.json", base)
+        cand_path = _write_json(tmp_path, "cand.json", cand)
+
+        result = runner.invoke(
+            _get_app(),
+            ["compare", base_path, cand_path,
+             "--trajectory", "--fail-on-trajectory-regression"],
+        )
+        assert result.exit_code == 0
+
+    def test_compare_without_flag_skips_trajectory(self, runner, tmp_path):
+        """No --trajectory flag means no regression block, exit 0."""
+        from evalforge.models import Trajectory, TrajectoryStep
+        t = Trajectory(steps=[TrajectoryStep(index=0, tool="search")],
+                       final_answer="x")
+        base = _traj_run_result("base", {"t1": t})
+        cand = _traj_run_result("cand", {
+            "t1": Trajectory(
+                steps=[TrajectoryStep(index=0, tool="search"),
+                       TrajectoryStep(index=1, tool="search")],
+                final_answer="x"),
+        })
+        base_path = _write_json(tmp_path, "base.json", base)
+        cand_path = _write_json(tmp_path, "cand.json", cand)
+
+        result = runner.invoke(
+            _get_app(),
+            ["compare", base_path, cand_path],
+        )
+        assert result.exit_code == 0
+        assert "TRAJECTORY REGRESSION" not in result.output.upper()
+
+
+class TestCLIImportTrajectory:
+    def test_import_trajectory_writes_json_report(self, runner, tmp_path):
+        """evalforge import-trajectory produces a JSON report + metrics."""
+        traj_path = tmp_path / "traj.json"
+        traj_path.write_text(json.dumps({
+            "steps": [
+                {"index": 0, "tool": "search", "args": {"q": "hk"}},
+                {"index": 1, "tool": "calculator", "result": "2"},
+            ],
+            "final_answer": "2",
+        }), encoding="utf-8")
+        out_path = tmp_path / "report.json"
+
+        result = runner.invoke(
+            _get_app(),
+            ["import-trajectory", str(traj_path), "--out", str(out_path),
+             "--suite-name", "demo"],
+        )
+        assert result.exit_code == 0
+        assert "Imported" in result.output
+        data = json.loads(out_path.read_text())
+        assert data["suite_name"] == "demo"
+        assert data["tests"][0]["trajectory"]["steps"][0]["tool"] == "search"
+        assert data["trajectory_summary"]["convergence"]["converged"] is True
+        assert data["trajectory_summary"]["efficiency"]["steps"] == 2
+
+    def test_import_trajectory_markdown(self, runner, tmp_path):
+        """--out report.md produces markdown with per-tool table."""
+        traj_path = tmp_path / "traj.json"
+        traj_path.write_text(json.dumps({
+            "steps": [
+                {"index": 0, "tool": "search", "args": {"q": "hk"}},
+            ],
+            "final_answer": "ok",
+        }), encoding="utf-8")
+        out_path = tmp_path / "report.md"
+
+        result = runner.invoke(
+            _get_app(),
+            ["import-trajectory", str(traj_path), "--out", str(out_path)],
+        )
+        assert result.exit_code == 0
+        text = out_path.read_text()
+        assert "# Trajectory Report" in text
+        assert "| Tool |" in text
+        assert "search" in text
+
+    def test_import_trajectory_allowed_tools_validity(self, runner, tmp_path):
+        """--allowed-tools enables the validity metric."""
+        traj_path = tmp_path / "traj.json"
+        traj_path.write_text(json.dumps({
+            "steps": [
+                {"index": 0, "tool": "mystery_tool", "args": {}},
+            ],
+            "final_answer": "ok",
+        }), encoding="utf-8")
+        out_path = tmp_path / "report.json"
+
+        result = runner.invoke(
+            _get_app(),
+            ["import-trajectory", str(traj_path), "--out", str(out_path),
+             "--allowed-tools", "search,calculator"],
+        )
+        assert result.exit_code == 0
+        data = json.loads(out_path.read_text())
+        validity = data["trajectory_summary"]["validity"]
+        assert validity["invalid_calls"] == 1
+        assert validity["invalid_tool_names"] == ["mystery_tool"]
+
+    def test_import_trajectory_missing_file(self, runner, tmp_path):
+        """Missing trajectory file errors cleanly with exit 1."""
+        result = runner.invoke(
+            _get_app(),
+            ["import-trajectory", str(tmp_path / "nope.json")],
+        )
+        assert result.exit_code == 1
+        assert "not found" in result.output.lower()
+
+
+# ---------------------------------------------------------------------------
 # Helper to import the app lazily (avoid CI issues with missing deps)
 # ---------------------------------------------------------------------------
 

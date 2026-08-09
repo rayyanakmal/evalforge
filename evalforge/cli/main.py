@@ -158,16 +158,26 @@ def run(
 def compare(
     baseline_path: str = typer.Argument(..., help="Path to baseline JSON report"),
     candidate_path: str = typer.Argument(..., help="Path to candidate JSON report"),
+    trajectory: bool = typer.Option(
+        False, "--trajectory",
+        help="Also compare trajectory (process) quality and print the trajectory regression block",
+    ),
+    fail_on_trajectory_regression: bool = typer.Option(
+        False, "--fail-on-trajectory-regression",
+        help="Exit code 1 when the trajectory verdict is REGRESSED (CI gate)",
+    ),
 ) -> None:
     """Compare two run results and show a diff table.
 
     Loads two JSON reports (baseline and candidate) and displays a
     diff table with columns: test name, status, score change, cost
-    change, latency change.
+    change, latency change. With --trajectory, also compares process
+    quality (per-tool deltas + verdict).
 
     Examples:
         evalforge compare baseline.json candidate.json
         evalforge compare evalforge-output/report-old.json evalforge-output/report-new.json
+        evalforge compare old.json new.json --trajectory --fail-on-trajectory-regression
     """
     baseline_obj = Path(baseline_path)
     candidate_obj = Path(candidate_path)
@@ -212,6 +222,24 @@ def compare(
     from evalforge.reporting.diff_reporter import DiffReporter
     diff = DiffReporter()
     diff.write_diff(baseline, candidate)
+
+    # Trajectory (process) comparison — opt-in
+    if trajectory:
+        from evalforge.trajectory.regression import (
+            compare_trajectories,
+            format_trajectory_regression,
+        )
+        traj_rep = compare_trajectories(baseline, candidate)
+        typer.echo(format_trajectory_regression(traj_rep))
+        if (
+            fail_on_trajectory_regression
+            and traj_rep.get("verdict") == "REGRESSED"
+        ):
+            typer.echo(
+                "Trajectory regression detected — exiting 1 (CI gate).",
+                err=True,
+            )
+            raise typer.Exit(code=1)
 
 
 # ---------------------------------------------------------------------------
@@ -324,6 +352,131 @@ def init(
     typer.echo(f"    1. Edit {target_dir / 'evalforge.yaml'} with your API keys")
     typer.echo(f"    2. Run: evalforge run test-suites/example/suite.yaml --no-llm")
     typer.echo(f"    3. When ready, run without --no-llm for real evaluation")
+
+
+# ---------------------------------------------------------------------------
+# evalforge import-trajectory
+# ---------------------------------------------------------------------------
+
+@app.command("import-trajectory")
+def import_trajectory(
+    path: str = typer.Argument(..., help="Path to trajectory JSON/JSONL file"),
+    out: str = typer.Option(
+        "report.json", "--out",
+        help="Output report path (.json or .md)",
+    ),
+    suite_name: str = typer.Option(
+        "imported", "--suite-name",
+        help="Suite name to use in the report",
+    ),
+    allowed_tools: str = typer.Option(
+        None, "--allowed-tools",
+        help="Comma-separated allowed tool names (enables validity metric)",
+    ),
+) -> None:
+    """Import a trajectory file and produce a process report card.
+
+    The A fallback path (D3): sealed-box agents with no hooks export
+    their trace; evalforge grades it. Accepts our own JSON format,
+    OTel-style spans, or minimal JSONL.
+
+    Examples:
+        evalforge import-trajectory trajectory.json --out report.json
+        evalforge import-trajectory trajectory.json --out report.md --allowed-tools search,calculator
+    """
+    from evalforge.models import TestResult, Trajectory
+    from evalforge.trajectory.importers import load_trajectory_json
+    from evalforge.trajectory.metrics import (
+        compute_budget,
+        compute_convergence,
+        compute_efficiency,
+        compute_recovery,
+        compute_tool_stats,
+        compute_validity,
+    )
+
+    try:
+        traj: Trajectory = load_trajectory_json(path)
+    except ValueError as e:
+        typer.echo(f"Error: {e}", err=True)
+        raise typer.Exit(code=1)
+
+    allowed = {t.strip() for t in allowed_tools.split(",")} if allowed_tools else None
+
+    # Build a single-test RunResult so reporters/UI can consume it uniformly
+    test = TestResult(
+        id="imported",
+        status="pass" if compute_convergence(traj)["converged"] else "fail",
+        response=traj.final_answer,
+        trajectory=traj,
+    )
+    report = RunResult(
+        suite_name=suite_name,
+        timestamp=datetime.now(timezone.utc).isoformat(),
+        duration_ms=0.0,
+        tests=[test],
+    )
+
+    # Process metrics section
+    metrics = {
+        "convergence": compute_convergence(traj),
+        "efficiency": compute_efficiency(traj),
+        "tool_stats": compute_tool_stats(traj),
+        "validity": compute_validity(traj, allowed),
+        "recovery": compute_recovery(traj),
+        "budget": compute_budget(traj),
+    }
+    report.trajectory_summary = metrics
+
+    out_path = Path(out)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    if out_path.suffix == ".md":
+        out_path.write_text(_trajectory_markdown(report), encoding="utf-8")
+    else:
+        out_path.write_text(report.model_dump_json(indent=2), encoding="utf-8")
+
+    typer.echo(f"Imported trajectory from {path}")
+    typer.echo(f"  Steps: {metrics['efficiency']['steps']}, "
+              f"converged: {metrics['convergence']['converged']}")
+    typer.echo(f"  Report written to {out_path}")
+
+
+def _trajectory_markdown(report: RunResult) -> str:
+    """Render a trajectory report as markdown for human reading."""
+    m = report.trajectory_summary or {}
+    lines = [
+        "# Trajectory Report",
+        "",
+        f"- Suite: {report.suite_name}",
+        f"- Timestamp: {report.timestamp}",
+        "",
+        "## Process metrics",
+        "",
+    ]
+    conv = m.get("convergence") or {}
+    eff = m.get("efficiency") or {}
+    lines.append(f"- Converged: {conv.get('converged')} "
+                 f"(terminal: {conv.get('terminal_reason')})")
+    lines.append(f"- Steps: {eff.get('steps')} | Tool calls: {eff.get('tool_calls')} "
+                 f"| Repeated calls: {eff.get('repeated_calls')}")
+    stats = m.get("tool_stats") or {}
+    lines.append("")
+    lines.append("## Per-tool")
+    lines.append("")
+    lines.append("| Tool | Calls | Errors | Latency (ms) | Cost (USD) | Error rate |")
+    lines.append("|------|-------|--------|---------------|------------|------------|")
+    for tool, e in (stats.get("per_tool") or {}).items():
+        lines.append(
+            f"| {tool} | {e['calls']} | {e['errors']} | "
+            f"{e['total_latency_ms']:.1f} | {e['total_cost_usd']:.4f} | "
+            f"{e['error_rate']:.2f} |"
+        )
+    val = m.get("validity")
+    if val:
+        lines.append("")
+        lines.append(f"## Validity: {val['invalid_calls']} invalid calls "
+                     f"(unknown tools: {val['invalid_tool_names'] or 'none'})")
+    return "\n".join(lines)
 
 
 # ---------------------------------------------------------------------------
