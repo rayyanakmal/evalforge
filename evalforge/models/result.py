@@ -88,3 +88,44 @@ class RunResult(BaseModel):
     summary: Summary = Field(default_factory=Summary)
     # v2: optional aggregate process metrics, populated by the metrics layer.
     trajectory_summary: Optional[dict] = None
+
+
+def build_summary_from_tests(tests: list[TestResult]) -> Summary:
+    """Compute a Summary from raw TestResults (no trackers needed).
+
+    Used by importers and the UI when a RunResult arrives without a summary
+    (e.g. imported trajectory reports). Mirrors TestRunner._build_summary's
+    fallback path: direct sums, percentiles over positive latencies.
+    """
+    total = len(tests)
+    passed = sum(1 for t in tests if t.status == "pass")
+    failed = sum(1 for t in tests if t.status == "fail")
+    errored = sum(1 for t in tests if t.status == "error")
+    pass_rate = passed / total if total > 0 else 0.0
+    total_cost = sum(t.cost_usd or 0.0 for t in tests)
+    latencies = [t.latency_ms for t in tests if (t.latency_ms or 0) > 0]
+    avg_latency = sum(latencies) / len(latencies) if latencies else 0.0
+    p50 = _percentile(latencies, 50) if latencies else None
+    p95 = _percentile(latencies, 95) if latencies else None
+    p99 = _percentile(latencies, 99) if latencies else None
+    return Summary(
+        total=total,
+        passed=passed,
+        failed=failed,
+        errored=errored,
+        pass_rate=pass_rate,
+        total_cost_usd=total_cost,
+        avg_latency_ms=avg_latency,
+        latency_p50=p50,
+        latency_p95=p95,
+        latency_p99=p99,
+    )
+
+
+def _percentile(values: list[float], pct: float) -> float:
+    """Nearest-rank percentile over a sorted copy (mirrors executor)."""
+    if not values:
+        return 0.0
+    s = sorted(values)
+    idx = max(0, min(len(s) - 1, int(round((pct / 100.0) * len(s)) - 1)))
+    return s[idx]

@@ -123,6 +123,31 @@ strong { color: var(--text); }
   white-space: nowrap;
 }
 
+/* ---------- Badges (trajectory verdict) ---------- */
+.badge {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg-soft);
+  color: var(--text-muted);
+}
+.badge.success {
+  border-color: var(--success);
+  color: var(--success);
+  background: var(--success-soft);
+}
+.badge.danger {
+  border-color: var(--error);
+  color: var(--error);
+  background: var(--error-soft);
+}
+
 /* ---------- Metric cards ---------- */
 [data-testid="stMetric"] {
   background: var(--bg-soft);

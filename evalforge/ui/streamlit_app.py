@@ -17,6 +17,13 @@ import streamlit as st
 
 from evalforge.models.result import RunResult
 from evalforge.ui.metrics import RAGAS_METRICS, metric_names
+from evalforge.ui.trajectory_display import (
+    per_tool_df,
+    regression_df,
+    steps_df,
+    trajectory_metrics_df,
+    verdict_badge_html,
+)
 
 st.set_page_config(page_title="evalforge — Eval Dashboard", page_icon="⚡", layout="wide")
 
@@ -52,6 +59,94 @@ def load_default_runs() -> dict[str, RunResult]:
         if p.exists():
             runs[f.replace("sample_results_", "").replace(".json", "")] = load_run(str(p))
     return runs
+
+
+def load_trajectory_default_runs() -> dict[str, RunResult]:
+    """Load the built-in trajectory demo: clean run A vs loopy run B.
+
+    Imports the committed trajectory files (examples/trajectories_run_*.json)
+    through the same path as evalforge import-trajectory, so the dashboard
+    numbers match the CLI exactly (V5 reproducibility).
+    """
+    from evalforge.trajectory.importers import load_trajectories_file
+    from evalforge.trajectory.metrics import summarize_trajectories
+    from evalforge.models import TestResult, build_summary_from_tests
+
+    runs = {}
+    for f, label in (("trajectories_run_a.json", "traj A (clean)"),
+                     ("trajectories_run_b.json", "traj B (loopy)")):
+        p = EXAMPLES / f
+        if not p.exists():
+            continue
+        trajs = load_trajectories_file(str(p))
+        tests = [
+            TestResult(id=tid, status="pass", response=t.final_answer, trajectory=t)
+            for tid, t in trajs.items()
+        ]
+        report = RunResult(
+            suite_name=label,
+            timestamp="demo",
+            duration_ms=0.0,
+            tests=tests,
+            summary=build_summary_from_tests(tests),
+        )
+        report.trajectory_summary = summarize_trajectories(tests)
+        runs[label] = report
+    return runs
+
+
+def load_uploaded_trajectory(uploaded) -> RunResult | None:
+    """Load an uploaded trajectory file (single or per-test map) as a run."""
+    from evalforge.trajectory.importers import (
+        load_trajectories_file,
+        load_trajectory_json,
+    )
+    from evalforge.trajectory.metrics import summarize_trajectories
+    from evalforge.models import TestResult, build_summary_from_tests
+
+    try:
+        raw = json.loads(uploaded.getvalue())
+        is_map = (
+            isinstance(raw, dict)
+            and bool(raw)
+            and all(isinstance(v, dict) and "steps" in v for v in raw.values())
+        )
+        if is_map:
+            trajs = load_trajectories_file(
+                _write_temp(uploaded, raw))
+            tests = [
+                TestResult(id=tid, status="pass", response=t.final_answer, trajectory=t)
+                for tid, t in trajs.items()
+            ]
+        else:
+            traj = load_trajectory_json(_write_temp(uploaded, raw))
+            tests = [
+                TestResult(id="imported", status="pass",
+                           response=traj.final_answer, trajectory=traj)
+            ]
+        report = RunResult(
+            suite_name=uploaded.name.replace(".json", ""),
+            timestamp="upload",
+            duration_ms=0.0,
+            tests=tests,
+            summary=build_summary_from_tests(tests),
+        )
+        report.trajectory_summary = summarize_trajectories(tests)
+        return report
+    except Exception as e:
+        st.error(f"Could not parse trajectory {uploaded.name}: {e}")
+        return None
+
+
+def _write_temp(uploaded, raw) -> str:
+    """Materialize an uploaded trajectory to a temp file for the importer."""
+    import tempfile
+
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".json", delete=False, encoding="utf-8"
+    ) as f:
+        json.dump(raw, f)
+        return f.name
 
 
 def load_uploaded(uploaded) -> RunResult | None:
@@ -104,13 +199,43 @@ def render_percentiles(run: RunResult, key_prefix: str):
         cols[0].write(f"**p50** {s.latency_p50:.0f}ms" if s.latency_p50 else "**p50** n/a")
         cols[1].write(f"**p95** {s.latency_p95:.0f}ms" if s.latency_p95 else "**p95** n/a")
         cols[2].write(f"**p99** {s.latency_p99:.0f}ms" if s.latency_p99 else "**p99** n/a")
-        total_tokens = sum((t.tokens.total or 0) for t in run.tests)
+        total_tokens = sum((t.tokens.total or 0) for t in run.tests if t.tokens)
         cols[3].write(f"**tokens** {total_tokens:,}")
         if run.tests:
             st.markdown(
-                f"Total input tokens: {sum((t.tokens.input or 0) for t in run.tests):,} · "
-                f"output: {sum((t.tokens.output or 0) for t in run.tests):,}"
+                f"Total input tokens: {sum((t.tokens.input or 0) for t in run.tests if t.tokens):,} · "
+                f"output: {sum((t.tokens.output or 0) for t in run.tests if t.tokens):,}"
             )
+
+
+def render_trajectory_report(run: RunResult):
+    """Trajectory report card: process metrics, per-tool rollup, step timeline."""
+    if not run.trajectory_summary:
+        return
+
+    st.subheader("Process metrics (trajectory)")
+    mdf = trajectory_metrics_df(run.trajectory_summary)
+    cols = st.columns(4)
+    for i in range(min(4, len(mdf))):
+        with cols[i]:
+            st.metric(str(mdf["metric"].iloc[i]), str(mdf["value"].iloc[i]))
+
+    st.markdown("**Per-tool rollup**")
+    tdf = per_tool_df(run.trajectory_summary)
+    if not tdf.empty:
+        st.dataframe(tdf, use_container_width=True, hide_index=True)
+
+    with st.expander("Step timeline — pick a test to inspect the journey"):
+        traj_tests = [t for t in run.tests if t.trajectory is not None]
+        if traj_tests:
+            options = {t.id: t for t in traj_tests}
+            selected = st.selectbox(
+                "Test", list(options.keys()), key=f"timeline_{run.suite_name}"
+            )
+            sdf = steps_df(options[selected].trajectory)
+            st.dataframe(sdf, use_container_width=True, hide_index=True)
+        else:
+            st.markdown("No trajectory data on individual tests.")
 
 
 def run_to_df(run: RunResult) -> pd.DataFrame:
@@ -149,18 +274,35 @@ st.markdown(
 # --- Sidebar ---
 with st.sidebar:
     st.title("Controls")
-    source = st.radio("Data source", ["Sample (v1 vs v2)", "Upload"], index=0)
+    source = st.radio(
+        "Data source",
+        ["Sample (v1 vs v2)", "Sample (trajectory A vs B)", "Upload"],
+        index=0,
+    )
 
     runs: dict[str, RunResult] = {}
     if source == "Sample (v1 vs v2)":
         runs = load_default_runs()
         if not runs:
             st.error("Sample data not found. Run examples/gen_samples.py first.")
+    elif source == "Sample (trajectory A vs B)":
+        runs = load_trajectory_default_runs()
+        if not runs:
+            st.error(
+                "Trajectory sample not found. Run "
+                "examples/gen_demo_trajectories.py first."
+            )
     else:
-        up = st.file_uploader("Upload result JSON", type=["json"], accept_multiple_files=True)
+        up = st.file_uploader(
+            "Upload result JSON or trajectory JSON",
+            type=["json"],
+            accept_multiple_files=True,
+        )
         if up:
             for f in up:
                 r = load_uploaded(f)
+                if r is None:
+                    r = load_uploaded_trajectory(f)
                 if r:
                     runs[r.suite_name] = r
 
@@ -168,7 +310,7 @@ with st.sidebar:
     st.caption(RAGAS_METRICS[metric]["description"])
 
     st.divider()
-    st.caption("evalforge — eval-driven agent testing · v0.1.0")
+    st.caption("evalforge — eval-driven agent testing · v0.2.0")
 
 if not runs:
     st.warning("No runs loaded. Use the sample data or upload a result JSON.")
@@ -199,6 +341,7 @@ if len(runs) == 1:
     st.subheader(name)
     render_metrics(run, "single")
     render_percentiles(run, "single")
+    render_trajectory_report(run)
 
     st.subheader("Per-case results")
     df = run_to_df(run)
@@ -266,6 +409,40 @@ else:
         elif len(statuses) >= 2 and statuses[0] == "fail" and statuses[-1] == "pass":
             st.markdown(f"- 🟢 **{tid}** fixed: failed in {names[0]}, passed in {names[-1]}")
 
+    # Trajectory regression (process quality) — first two runs with data
+    traj_names = [n for n in names if runs[n].trajectory_summary]
+    if len(traj_names) >= 2:
+        from evalforge.trajectory.regression import compare_trajectories
+
+        rep = compare_trajectories(runs[traj_names[0]], runs[traj_names[1]])
+        st.markdown("---")
+        st.subheader("Trajectory regression (process quality)")
+        st.markdown(
+            f"Comparing **{traj_names[0]}** → **{traj_names[1]}**: "
+            f"same answers may hide worse journeys — more repeated calls, "
+            f"more steps, more cost."
+        )
+        verdict = rep.get("verdict")
+        if verdict:
+            st.markdown(f"Verdict: {verdict_badge_html(verdict)}", unsafe_allow_html=True)
+        rdf = regression_df(rep)
+        if not rdf.empty:
+            st.dataframe(rdf, use_container_width=True, hide_index=True)
+        # Per-test step deltas
+        ptd = rep.get("per_test") or {}
+        if ptd:
+            rows = []
+            for tid, d in ptd.items():
+                rows.append({
+                    "test": tid,
+                    "steps_delta": d.get("steps_delta", ""),
+                    "repeats_delta": d.get("repeated_calls_delta", ""),
+                    "cost_delta": d.get("cost_delta", ""),
+                    "note": "appeared" if d.get("appeared") else ("disappeared" if d.get("disappeared") else ""),
+                })
+            st.markdown("**Per-test journey deltas**")
+            st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
+
     # Per-run details in tabs
     tabs = st.tabs(names)
     for tab, name in zip(tabs, names):
@@ -273,6 +450,7 @@ else:
             run = runs[name]
             render_metrics(run, f"tab_{name}")
             render_percentiles(run, f"tab_{name}")
+            render_trajectory_report(run)
             df = run_to_df(run)
             st.dataframe(
                 df.style.map(style_status, subset=["status"]),
@@ -282,7 +460,7 @@ else:
 
 st.markdown(
     """<div class="footer">
-  <span>evalforge v0.1.0 · MIT</span>
+  <span>evalforge v0.2.0 · MIT</span>
   <span><a href="https://github.com/rayyanakmal/evalforge">GitHub</a> · Streamlit</span>
 </div>""",
     unsafe_allow_html=True,

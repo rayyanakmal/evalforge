@@ -386,7 +386,7 @@ def import_trajectory(
         evalforge import-trajectory run_a.json --out run_a_report.json
         evalforge import-trajectory trajectory.json --out report.md --allowed-tools search,calculator
     """
-    from evalforge.models import TestResult, Trajectory
+    from evalforge.models import TestResult, Trajectory, build_summary_from_tests
     from evalforge.trajectory.importers import (
         load_trajectories_file,
         load_trajectory_json,
@@ -450,6 +450,7 @@ def import_trajectory(
         timestamp=datetime.now(timezone.utc).isoformat(),
         duration_ms=0.0,
         tests=tests,
+        summary=build_summary_from_tests(tests),
     )
 
     # Process metrics section — always the summarize_trajectories shape so
