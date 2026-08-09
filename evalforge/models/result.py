@@ -4,6 +4,15 @@ from typing import Optional, Literal
 
 from pydantic import BaseModel, Field
 
+from .tokens import TokenCount
+from .trajectory import Trajectory
+
+# Backward-compat re-export: existing code imports TokenCount from
+# evalforge.models.result; the class itself lives in models/tokens.py
+# to avoid a circular import (result.py -> trajectory.py -> tokens.py).
+
+__all__ = ["TokenCount"]
+
 
 class DimensionScore(BaseModel):
     """Per-dimension score from rubric evaluation."""
@@ -21,18 +30,6 @@ class ScoreResult(BaseModel):
     method: str
 
 
-class TokenCount(BaseModel):
-    """Token usage for a single LLM call.
-    
-    Fields are Optional[int] to support open-source models
-    that don't report token counts (N/A edge case per US-3).
-    """
-    __test__ = False
-    input: Optional[int] = 0
-    output: Optional[int] = 0
-    total: Optional[int] = 0
-
-
 class TestResult(BaseModel):
     """Result for a single test case execution."""
     __test__ = False
@@ -45,6 +42,8 @@ class TestResult(BaseModel):
     latency_ms: float = 0.0
     cost_usd: float = 0.0
     error: Optional[str] = None
+    # v2: the journey. Optional + default None so v1 run files parse unchanged (V4).
+    trajectory: Optional[Trajectory] = None
 
 
 class Summary(BaseModel):
@@ -87,3 +86,5 @@ class RunResult(BaseModel):
     duration_ms: float
     tests: list[TestResult] = Field(default_factory=list)
     summary: Summary = Field(default_factory=Summary)
+    # v2: optional aggregate process metrics, populated by the metrics layer.
+    trajectory_summary: Optional[dict] = None

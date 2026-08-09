@@ -95,7 +95,96 @@ Edge cases:
 
 ---
 
+## US-T1: Trajectory Capture (the journey, not just the answer)
+
+**AC-T1.1:** Given an agent run under evaluation, when the agent makes tool calls, then evalforge records each call as an ordered step with tool name, args, result, latency, and optional tokens/cost/thought/error.
+
+**AC-T1.2:** Given an agent built on a framework (LangGraph/CrewAI), when the user registers a callback, then the trajectory is captured with zero changes to the agent's code.
+
+**AC-T1.3:** Given a custom agent loop, when the user adds one `emit(...)` line per tool call site, then the trajectory is captured in order.
+
+**AC-T1.4:** Given a sealed-box agent with no hooks, when the user imports a trajectory JSON file, then evalforge produces the same report card as a captured run.
+
+**AC-T1.5:** Given a captured run, when the report is produced, then each TestResult carries its trajectory and the process metrics layer summarizes it.
+
+Edge cases:
+- Empty trajectory → reported as not converged, zeros for metrics, not an error
+- Index out of order / duplicated in import → rejected with a clear validation error
+- Non-JSON args/result → rejected up front (determinism rule)
+
+---
+
+## US-T2: Process Metrics (pure code, no LLM judge)
+
+**AC-T2.1:** Given a trajectory, when evaluated, then convergence (terminal reason), efficiency (steps, tool calls, repeated identical calls), per-tool stats (calls, errors, latency, cost), validity (unknown tools when the allowed set is known), recovery (errors survived vs died), and budget adherence are computed.
+
+**AC-T2.2:** Given the same trajectory twice, when evaluated, then the metrics are byte-identical (deterministic).
+
+**AC-T2.3:** Given a trajectory with an unknown tool call and no allowed-tools metadata, then validity is skipped (None), not crashed.
+
+Edge cases:
+- Zero-step trajectory → converged=False, terminal_reason="empty"
+- Trajectory ending at an error step → died_on_error=True
+- Repeated identical tool+args calls → counted as repeated_calls with raw evidence exposed
+
+---
+
+## US-T3: Trajectory Regression (run A vs run B)
+
+**AC-T3.1:** Given two runs with trajectories, when compared, then per-tool deltas (calls, error rate, cost) and per-test step deltas are reported.
+
+**AC-T3.2:** Given a tool present in the baseline but absent in the candidate, when compared, then that tool is marked REGRESSED (disappeared-tool rule, mirroring visionforge).
+
+**AC-T3.3:** Given a candidate that loops 3x more than the baseline with the same pass rate, when compared, then the process metrics show the regression even though outcomes match.
+
+**AC-T3.4:** Given `evalforge compare --trajectory --fail-on-trajectory-regression`, when any tool regressed, then the CLI exits 1 (CI gate).
+
+---
+
+## US-T4: Versioned Showcase (clients see the evolution)
+
+**AC-T4.1:** Given a released version, when viewed on GitHub, then it appears on the Releases page with plain-language notes ("what this version does, what changed, why it matters"), not commit messages.
+
+**AC-T4.2:** Given v0.1.0 and v0.2.0, when a client visits the repo, then each release links a deployed demo of that exact version so the evolution is clickable.
+
+**AC-T4.3:** Given the README, when read, then a "Versions" section links the Releases page.
+
+Edge cases:
+- Back-tagging: v1 state tagged `v0.1.0` post-hoc at the pre-v2 commit — release notes written for both versions at once
+
+---
+
 ## Data Contracts
+
+### TrajectoryStep
+```yaml
+index: integer (0-based, strictly increasing)
+tool: string
+args: object (JSON-safe, max nesting depth 8)
+result: string | object | list | null
+thought: string | null
+latency_ms: float
+tokens: { input: int, output: int, total: int } | null
+cost_usd: float
+error: string | null
+```
+
+### Trajectory (attached to TestResult as optional `trajectory`)
+```yaml
+steps: TrajectoryStep[] (ordered, index == position)
+final_answer: string | null
+```
+
+### RunResult.trajectory_summary (optional)
+```yaml
+mean_steps: float
+mean_tool_calls: float
+total_loops: integer
+total_error_steps: integer
+per_tool: { tool_name: { calls, errors, total_latency_ms, total_cost_usd, error_rate } }
+```
+
+---
 
 ### TestSuite
 ```yaml
@@ -230,6 +319,17 @@ evalforge/
 - Persistent result database (file-based JSON reports)
 - Production-grade webhook or API server
 
+## Out of Scope (v0.2 — trajectory layer)
+
+- ~~Trajectory capture, metrics, regression, UI~~ — **Done:** v0.2 (US-T1..T3; US-T4 versioning showcase)
+- Tracing/observability platform (Langfuse/LangSmith/Phoenix territory) — we grade traces, we don't host/visualize production telemetry
+- OTel exporter / telemetry transport — we adopt the span shape as input schema, we don't ship a pipeline
+- Agent runtime / framework — we grade trajectories, we don't run arbitrary agents
+- New benchmark (τ-bench/SWE-bench territory) and golden-trajectory dataset curation
+- LLM-as-judge for trajectory quality (rubric judge deferred to a later minor release)
+- Stateful-world simulation (τ-bench-style databases/policies)
+- Branch-per-version or commit-history-as-showcase versioning (see US-T4: tags + Releases + per-version demos only)
+
 ---
 
 ## Extension Point Map
@@ -241,3 +341,5 @@ evalforge/
 | New scorer strategy | Scorer | CustomScorer | New class implementing `BaseScorer` |
 | New LLM provider | LLMClient | DeepSeekClient, AnthropicClient | New class extending `BaseLLMClient` |
 | New output format | Reporter | JSONReporter, MarkdownReporter | New class implementing `BaseReporter` |
+| New capture adapter (US-T1) | StepRecorder / adapters | Framework callback, client shim, emit_step | New adapter class, zero core modification |
+| New trajectory metric (US-T2) | metrics module | Pure function over Trajectory | New function + golden test |
