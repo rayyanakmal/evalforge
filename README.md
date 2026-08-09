@@ -1,8 +1,8 @@
 <p align="center">
   <img src="https://img.shields.io/badge/python-3.11%2B-blue" alt="Python 3.11+">
-  <img src="https://img.shields.io/badge/tests-142%20passing-brightgreen" alt="142 tests passing">
+  <img src="https://img.shields.io/badge/tests-235%20passing-brightgreen" alt="235 tests passing">
   <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License">
-  <img src="https://img.shields.io/badge/status-v0.1.0--alpha-yellow" alt="v0.1.0-alpha">
+  <img src="https://img.shields.io/badge/version-v0.2.0-blue" alt="v0.2.0">
 </p>
 
 <h1 align="center">⚒️ EvalForge</h1>
