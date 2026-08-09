@@ -150,12 +150,13 @@ def _write_temp(uploaded, raw) -> str:
 
 
 def load_uploaded(uploaded) -> RunResult | None:
-    """Load an uploaded JSON file as a run."""
+    """Load an uploaded RunResult JSON. Returns None (silently) when the file
+    isn't a RunResult — the caller falls back to the trajectory loader."""
     try:
         data = json.loads(uploaded.getvalue())
         return RunResult.model_validate(data)
-    except Exception as e:
-        st.error(f"Could not parse {uploaded.name}: {e}")
+    except Exception:
+        # Not a RunResult — likely a trajectory file; caller handles it.
         return None
 
 
