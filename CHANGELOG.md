@@ -2,6 +2,32 @@
 
 All notable changes to EvalForge are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/); versioning follows [SemVer](https://semver.org/).
 
+## [Unreleased] - 2026-08-10
+
+### Added — real execution in `evalforge run` (one run, both dimensions)
+
+`evalforge run` previously only supported `--no-llm` dry runs. It now executes
+a suite against a configured provider and captures trajectories into the same
+report, so a single run produces BOTH the answer-level results AND the process
+journey:
+
+- **Executor trajectory capture** (`runner/executor.py`) — `capture_trajectories=True`
+  gives every test a `StepRecorder`; the generate function receives `(prompt, recorder)`
+  and the recorded journey is attached to each `TestResult`. Default remains `False`
+  (v1 behavior unchanged).
+- **Real-run wiring** (`cli/run_real.py`) — API-key resolution (env or `~/.hermes/.env`),
+  provider/model overrides (`--provider`, `--model`), generate fn that emits `llm` steps
+  with tokens + cost, and `run_suite()` which attaches the aggregate `trajectory_summary`.
+- **Per-test scoring dispatch** (`scoring/registry.py`) — `RegistryScorer` routes each
+  response to the scorer matching its `expected.type`, so mixed exact + rubric suites
+  run in one executor.
+- **CLI** — `evalforge run suite.yaml` now works for real (previously errored with
+  "Real LLM execution requires a configured provider"). `evalforge run suite.yaml
+  --provider deepseek --model deepseek-chat` compares agents/versions.
+- **Workflow** — run once per agent, then `evalforge compare a.json b.json --trajectory`
+  shows answer diff AND trajectory regression from the same files; the dashboard upload
+  shows both views.
+
 ## [v0.2.0] - 2026-08-09
 
 ### Added — Trajectory-level agent evaluation

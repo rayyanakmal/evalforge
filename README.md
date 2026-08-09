@@ -1,6 +1,6 @@
 <p align="center">
   <img src="https://img.shields.io/badge/python-3.11%2B-blue" alt="Python 3.11+">
-  <img src="https://img.shields.io/badge/tests-235%20passing-brightgreen" alt="235 tests passing">
+  <img src="https://img.shields.io/badge/tests-246%20passing-brightgreen" alt="246 tests passing">
   <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License">
   <img src="https://img.shields.io/badge/version-v0.2.0-blue" alt="v0.2.0">
 </p>
@@ -90,17 +90,22 @@ pip install "evalforge[ui]"
 # Scaffold a new evaluation project
 evalforge init
 
-# Run the example suite
+# Run the example suite — real execution against evalforge.yaml's target provider,
+# capturing each test's trajectory (journey) into the same report
 evalforge run test-suites/example/suite.yaml
 
-# Compare two runs (regression detection)
+# Run the same suite against a different model/provider (compare agents or versions)
+evalforge run suite.yaml --provider deepseek --model deepseek-chat
+
+# Compare two runs (regression detection) — answer-level diff
 evalforge compare baselines/run-1.json evalforge-output/report-<ts>.json
 
-# Import a trajectory export from any agent and get a process report card
-evalforge import-trajectory trajectory.json --out report.json
-
 # Compare two runs INCLUDING process quality (trajectory regression)
+# Same files, both dimensions: pass rate, cost, latency AND steps/loops/per-tool
 evalforge compare run_a.json run_b.json --trajectory
+
+# Import a trajectory export from a sealed-box agent and get a process report card
+evalforge import-trajectory trajectory.json --out report.json
 
 # CI gate — exits 0 (pass) or 1 (fail); --fail-on-trajectory-regression also fails on process regressions
 evalforge gate
@@ -109,6 +114,13 @@ evalforge compare run_a.json run_b.json --trajectory --fail-on-trajectory-regres
 # Launch the web dashboard
 streamlit run evalforge/ui/streamlit_app.py
 ```
+
+**One run, both dimensions:** `evalforge run` executes your suite against the configured
+provider and records the journey of every test (steps, tokens, cost, latency). The saved
+report JSON carries both the answer-level results AND the trajectory report card — so
+`compare --trajectory` and the dashboard's trajectory view work on the same file, no
+separate trajectory run needed. For tool-using agents, emit tool steps in your
+`generate_fn` (via the capture layer) and they appear in the process metrics.
 
 ---
 

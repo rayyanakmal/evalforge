@@ -7,9 +7,11 @@ Pre-registered scorers: exact, rubric
 Future: semantic, function
 """
 
-from evalforge.scoring.base import Scorer
+from evalforge.scoring.base import Scorer, ScoringError
 from evalforge.scoring.exact import ExactScorer
 from evalforge.scoring.rubric import RubricScorer
+from evalforge.models.result import ScoreResult
+from evalforge.models.suite import Expected
 
 
 class ScorerRegistry:
@@ -77,3 +79,25 @@ def create_default_registry(
         registry.register("rubric", RubricScorer(judge_client=rubric_judge_client))
 
     return registry
+
+
+class RegistryScorer(Scorer):
+    """Delegates per-test scoring to the scorer matching expected.type.
+
+    Lets a single Executor run a mixed suite (exact + rubric + …) by
+    dispatching each response to the registered scorer for its expected
+    type — the runner gets one scorer, suites keep per-test types.
+    """
+
+    def __init__(self, registry: ScorerRegistry):
+        self.registry = registry
+
+    async def score(self, response: str, expected: Expected) -> ScoreResult:
+        try:
+            scorer = self.registry.get(expected.type)
+        except KeyError as e:
+            raise ScoringError(
+                f"No scorer registered for expected.type={expected.type!r}. "
+                f"Available: {sorted(self.registry.list_scorers())}"
+            ) from e
+        return await scorer.score(response, expected)

@@ -24,8 +24,11 @@ from evalforge.tracking.latency import LatencyTracker
 logger = logging.getLogger(__name__)
 
 
-# Type alias for the LLM generate function
-GenerateFn = Callable[[str], Awaitable[LLMResponse]]
+# Type alias for the LLM generate function.
+# When the Executor is built with capture_trajectories=True the callable
+# receives a second arg (the per-test StepRecorder) so it can emit steps.
+# Without capture it is called with only the prompt (v1 contract).
+GenerateFn = Callable[..., Awaitable[LLMResponse]]
 
 
 # ---------------------------------------------------------------------------
@@ -142,10 +145,15 @@ class Executor:
         generate_fn: GenerateFn,
         scorer: Scorer,
         concurrency: int = 10,
+        capture_trajectories: bool = False,
     ):
         self.generate_fn = generate_fn
         self.scorer = scorer
         self.concurrency = concurrency
+        # When True, each test gets a StepRecorder and the generate_fn is
+        # called as generate_fn(prompt, recorder) so it can emit steps.
+        # The recorded trajectory is attached to the TestResult.
+        self.capture_trajectories = capture_trajectories
 
     async def run(self, suite: TestSuite) -> RunResult:
         """Execute all test cases in the suite concurrently.
@@ -212,6 +220,9 @@ class Executor:
 
     async def _execute_test(self, test: TestCase) -> TestResult:
         """Execute a single test case: call LLM, score, return result."""
+        from evalforge.trajectory.capture import StepRecorder
+
+        recorder = StepRecorder() if self.capture_trajectories else None
         t_start = time.monotonic()
         response: Optional[str] = None
         error_msg: Optional[str] = None
@@ -220,12 +231,20 @@ class Executor:
         cost_usd: float = 0.0
 
         try:
-            # Call LLM with retry on transient failures
-            llm_response = await retry_with_backoff(
-                lambda: self.generate_fn(test.prompt),
-                max_retries=1,
-                base_delay=1.0,
-            )
+            # Call LLM with retry on transient failures. In capture mode the
+            # generate_fn receives the recorder so it can emit llm/tool steps.
+            if recorder is not None:
+                llm_response = await retry_with_backoff(
+                    lambda: self.generate_fn(test.prompt, recorder),
+                    max_retries=1,
+                    base_delay=1.0,
+                )
+            else:
+                llm_response = await retry_with_backoff(
+                    lambda: self.generate_fn(test.prompt),
+                    max_retries=1,
+                    base_delay=1.0,
+                )
             response = llm_response.content
             if llm_response.usage:
                 tokens = TokenCount(
@@ -263,6 +282,10 @@ class Executor:
         elif status == "error":
             failure_reason = error_msg
 
+        # Finish the recorder (marks convergence with the final answer).
+        if recorder is not None:
+            recorder.finish(response)
+
         return TestResult(
             id=test.id,
             status=status,
@@ -273,6 +296,7 @@ class Executor:
             latency_ms=latency_ms,
             cost_usd=cost_usd,
             error=failure_reason,
+            trajectory=recorder.trajectory() if recorder is not None else None,
         )
 
     @staticmethod

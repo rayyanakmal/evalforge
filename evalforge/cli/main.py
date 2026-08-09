@@ -13,6 +13,7 @@ import asyncio
 import json
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Optional
 
 import typer
 
@@ -87,6 +88,14 @@ def run(
         False, "--no-llm",
         help="Dry-run mode: do not call LLMs, use mock results",
     ),
+    provider: Optional[str] = typer.Option(
+        None, "--provider",
+        help="LLM provider override (deepseek|openai|anthropic). Defaults to evalforge.yaml target.",
+    ),
+    model: Optional[str] = typer.Option(
+        None, "--model",
+        help="Model override (e.g. deepseek-chat). Defaults to evalforge.yaml target.",
+    ),
 ) -> None:
     """Run a test suite and output results to stdout and JSON.
 
@@ -94,10 +103,16 @@ def run(
     prints a results table to stdout, and saves a JSON report to the
     output directory as evalforge-output/report-<timestamp>.json.
 
+    Real runs capture trajectories (v0.2.x): every test's journey is
+    recorded and the report carries both answer-level metrics AND the
+    process report card — so `evalforge compare a.json b.json --trajectory`
+    and the dashboard trajectory view work on the same file.
+
     Examples:
         evalforge run test-suites/example/suite.yaml
         evalforge run suite.yaml --output-dir results/ --concurrency 5
         evalforge run suite.yaml --no-llm  # dry-run for testing
+        evalforge run suite.yaml --provider deepseek --model deepseek-chat
     """
     suite_path_obj = Path(suite_path)
     if not suite_path_obj.exists():
@@ -123,14 +138,35 @@ def run(
     if no_llm:
         result = _dry_run_results(suite_name, tests)
     else:
-        # Real execution: create an executor and run
-        # For now, this requires a configured LLM client
-        typer.echo(
-            "Error: Real LLM execution requires a configured provider. "
-            "Use --no-llm for dry-run mode or configure judge/target in evalforge.yaml.",
-            err=True,
-        )
-        raise typer.Exit(code=1)
+        from evalforge.models.suite import TestSuite as SuiteModel
+        from evalforge.cli.run_real import run_suite
+
+        try:
+            suite = SuiteModel.model_validate(raw)
+        except Exception as e:
+            typer.echo(f"Error: Invalid suite file: {e}", err=True)
+            raise typer.Exit(code=1)
+
+        # Optional config (evalforge.yaml in cwd) supplies provider/model.
+        config = None
+        cfg_path = Path("evalforge.yaml")
+        if cfg_path.exists():
+            try:
+                config = load_config(cfg_path)
+            except Exception as e:
+                typer.echo(f"Warning: could not load {cfg_path}: {e}", err=True)
+
+        try:
+            result = run_suite(
+                suite,
+                config=config,
+                provider=provider,
+                model=model,
+                concurrency=concurrency,
+            )
+        except Exception as e:
+            typer.echo(f"Error: {e}", err=True)
+            raise typer.Exit(code=1)
 
     # Report to stdout (console)
     from evalforge.reporting.console_reporter import ConsoleReporter

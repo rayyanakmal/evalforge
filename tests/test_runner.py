@@ -502,3 +502,86 @@ async def test_retry_with_backoff_non_retryable_error():
 
     # Should only be called once — no retry for ValueError
     assert call_count == 1
+
+
+# ---------------------------------------------------------------------------
+# Trajectory capture in the Executor (v0.2.x: single run, both dimensions)
+# ---------------------------------------------------------------------------
+
+@pytest.mark.asyncio
+async def test_executor_capture_trajectories_records_steps():
+    """With capture_trajectories=True, generate_fn receives a recorder and the
+    TestResult carries the recorded trajectory (journey + final answer)."""
+
+    suite = TestSuite(
+        name="capture",
+        tests=[
+            TestCase(
+                id="t1",
+                prompt="What is the capital of France?",
+                expected=Expected(type="exact", value="Paris"),
+            ),
+        ],
+    )
+
+    async def generate_with_recorder(prompt: str, recorder) -> LLMResponse:
+        recorder.emit(
+            tool="llm",
+            args={"model": "deepseek-chat"},
+            result="Paris",
+            tokens_in=10,
+            tokens_out=5,
+            cost_usd=0.001,
+        )
+        return LLMResponse(
+            content="Paris",
+            usage=Usage(prompt_tokens=10, completion_tokens=5, total_tokens=15),
+            latency_ms=100.0,
+            cost_usd=0.001,
+        )
+
+    executor = Executor(
+        generate_fn=generate_with_recorder,
+        scorer=ExactScorer(),
+        capture_trajectories=True,
+    )
+    result = await executor.run(suite)
+
+    t = result.tests[0]
+    assert t.status == "pass"
+    assert t.trajectory is not None
+    assert len(t.trajectory.steps) == 1
+    assert t.trajectory.steps[0].tool == "llm"
+    assert t.trajectory.steps[0].tokens is not None
+    assert t.trajectory.steps[0].tokens.total == 15
+    assert t.trajectory.steps[0].cost_usd == 0.001
+    # final answer recorded → convergence
+    assert t.trajectory.final_answer == "Paris"
+
+
+@pytest.mark.asyncio
+async def test_executor_without_capture_has_no_trajectory():
+    """Default (capture_trajectories=False) keeps v1 behavior: no trajectory."""
+    suite = TestSuite(
+        name="nocapture",
+        tests=[
+            TestCase(
+                id="t1",
+                prompt="Say hello",
+                expected=Expected(type="exact", value="hello"),
+            ),
+        ],
+    )
+
+    async def plain_generate(prompt: str) -> LLMResponse:
+        return LLMResponse(
+            content="hello",
+            usage=Usage(prompt_tokens=3, completion_tokens=1, total_tokens=4),
+            latency_ms=50.0,
+            cost_usd=0.0005,
+        )
+
+    executor = Executor(generate_fn=plain_generate, scorer=ExactScorer())
+    result = await executor.run(suite)
+
+    assert result.tests[0].trajectory is None

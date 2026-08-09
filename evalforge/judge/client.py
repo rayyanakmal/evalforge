@@ -78,6 +78,15 @@ class LLMClient(ABC):
         """Human-readable provider name: 'deepseek', 'openai', 'anthropic'."""
         ...
 
+    @property
+    def model(self) -> str:
+        """Model name used by this client (e.g. 'deepseek-chat')."""
+        return getattr(self, "_model", "unknown")
+
+    @model.setter
+    def model(self, value: str) -> None:
+        self._model = value
+
 
 # ---------------------------------------------------------------------------
 # DeepSeek Client
