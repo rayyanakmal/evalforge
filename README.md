@@ -90,8 +90,15 @@ evalforge run test-suites/example/suite.yaml
 # Compare two runs (regression detection)
 evalforge compare baselines/run-1.json evalforge-output/report-<ts>.json
 
-# CI gate — exits 0 (pass) or 1 (fail)
+# Import a trajectory export from any agent and get a process report card
+evalforge import-trajectory trajectory.json --out report.json
+
+# Compare two runs INCLUDING process quality (trajectory regression)
+evalforge compare run_a.json run_b.json --trajectory
+
+# CI gate — exits 0 (pass) or 1 (fail); --fail-on-trajectory-regression also fails on process regressions
 evalforge gate
+evalforge compare run_a.json run_b.json --trajectory --fail-on-trajectory-regression
 
 # Launch the web dashboard
 streamlit run evalforge/ui/streamlit_app.py
@@ -99,16 +106,21 @@ streamlit run evalforge/ui/streamlit_app.py
 
 ## 📊 Web Dashboard
 
-Explore evaluation results without touching the CLI. Load one run for metrics, or two runs for a side-by-side regression matrix.
+Explore evaluation results without touching the CLI. Load one run for metrics, or two runs for a side-by-side regression matrix. From v0.2.0 you can also load trajectory exports and compare **process quality**, not just final answers.
 
-**Live demo:** https://evalforge-wmdbf6rtfxjzh668zugy9d.streamlit.app/
+**Live demo (v0.2.0):** https://evalforge-wmdbf6rtfxjzh668zugy9d.streamlit.app/
 
 - **Summary cards** — pass rate, case count, avg latency, total cost
 - **Per-case table** — status-highlighted results (pass/fail/error) with scores, latency, cost
 - **Regression matrix** — load v1 vs v2 and see exactly which cases flipped pass→fail (regression) or fail→pass (fixed)
+- **Trajectory report card** — process metrics per run: mean steps, mean tool calls, loop count, error steps, per-tool rollup (calls, errors, latency, cost)
+- **Step timeline** — every tool call with its args, result, latency, and errors
+- **Trajectory regression** — compare two runs on process quality with a REGRESSED/ok verdict: same pass rate, worse journey → caught (see the built-in sample)
 - **Latency percentiles** — p50/p95/p99 + token usage under the hood
 - **RAGAS-style metric presets** — industry-standard rubric vocabulary (faithfulness, answer relevancy, context precision, context recall, answer correctness) built in as LLM-judge rubric templates — no extra dependency
-- **Upload support** — drop in your own `RunResult` JSON files, or use the built-in v1/v2 sample regression story
+- **Upload support** — drop in your own `RunResult` JSON files or trajectory exports, or use the built-in v1/v2 sample regression story and the trajectory A vs B sample
+
+<img src="assets/trajectory-compare.png" alt="EvalForge v0.2.0 trajectory regression — same pass rate, worse process (loops), caught by process metrics" width="700">
 
 ---
 
@@ -117,6 +129,13 @@ Explore evaluation results without touching the CLI. Load one run for metrics, o
 ### ✅ Prove your AI works
 - **Pass/fail on every question** — run your agent against a test suite and see the pass rate instantly
 - **See the actual wrong answers** — not just "failed," but what the agent said vs. what was right
+
+### 🛤️ Grade the journey, not just the answer (v0.2.0)
+- **Process report card** — every run gets process metrics: convergence, steps/tool-calls per task, loop count (identical repeated calls), tool validity, error recovery, per-tool cost & latency, budget adherence
+- **Trajectory regression** — compare two runs and get a REGRESSED/ok verdict on process quality: "pass rate identical, but the new version loops 3× more on hard questions" is caught automatically
+- **Capture how you like** — record as your agent runs (drop-in client shims, one-line `emit_step`), or import a trajectory JSON/JSONL export from any agent (OTel-style span shape accepted)
+- **Pure-code metrics** — no LLM-as-judge for process quality; every number is deterministic and reproducible
+- **CI gate on process** — `compare --trajectory --fail-on-trajectory-regression` exits 1 when the journey degrades even if pass rate holds
 
 ### 🚨 Catch regressions before they ship
 - **Before/after comparison** — change a model or prompt, rerun, and see exactly which cases broke
@@ -248,7 +267,7 @@ concurrency: 10
 
 ## Project Status
 
-**v0.1.0-alpha** — Core engine, LLM-as-Judge scoring, cost tracking, CI gate, CLI, and Streamlit web dashboard complete. Built for and tested on DeepSeek v4, extensible to any OpenAI-compatible API. Dashboard live at [Streamlit Community Cloud](https://evalforge-wmdbf6rtfxjzh668zugy9d.streamlit.app/).
+**v0.2.0** — Trajectory-level evaluation: process metrics (convergence, efficiency, loops, validity, recovery, per-tool cost/latency), trajectory capture (shims, emit_step, import), trajectory regression with CI gate, and a dashboard trajectory view. Same pass rate, worse process → caught. See [Versions](#versions).
 
 ### Roadmap
 
@@ -258,16 +277,31 @@ concurrency: 10
 - [x] CI gate with regression detection
 - [x] CLI commands (run, compare, gate, init)
 - [x] Web dashboard for visualizing results
+- [x] Trajectory-level process metrics (v0.2.0)
+- [x] Trajectory capture: shims, emit_step, import (v0.2.0)
+- [x] Trajectory regression + CI gate (v0.2.0)
 - [ ] GitHub Actions integration
 - [ ] Real-time streaming evaluation
 - [ ] Plugin system for custom scorers
+
+## Versions
+
+| Version | What it is | Release notes |
+|---------|-----------|---------------|
+| **v0.2.0** | Trajectory-level agent evaluation — grades the journey (process metrics, trajectory regression), not just the final answer | [GitHub Release](https://github.com/rayyanakmal/evalforge/releases/tag/v0.2.0) |
+| **v0.1.0** | Original report card — pass rates, LLM-as-Judge rubrics, cost/latency, CI gate, dashboard | [GitHub Release](https://github.com/rayyanakmal/evalforge/releases/tag/v0.1.0) |
+
+**Live demo (v0.2.0):** https://evalforge-wmdbf6rtfxjzh668zugy9d.streamlit.app/ — try the trajectory sample from the sidebar ("Sample (trajectory A vs B)") to see the same-pass-rate-different-journey story.
 
 ## References
 
 - [SPEC.md](SPEC.md) — Full behavior spec with acceptance criteria
 - [ARCHITECTURE.md](ARCHITECTURE.md) — Design, interfaces, extension points
-- [assets/dashboard.png](assets/dashboard.png) — Dashboard screenshot
+- [assets/dashboard.png](assets/dashboard.png) — Dashboard screenshot (v0.1)
+- [assets/trajectory-compare.png](assets/trajectory-compare.png) — Trajectory regression screenshot (v0.2)
 - [examples/gen_samples.py](examples/gen_samples.py) — Sample regression-story data generator
+- [examples/gen_demo_trajectories.py](examples/gen_demo_trajectories.py) — Real-agent trajectory generator (clean vs loop-prone)
+- [examples/trajectories_run_a.json](examples/trajectories_run_a.json) / [trajectories_run_b.json](examples/trajectories_run_b.json) — Committed demo trajectories (real DeepSeek run)
 
 ## License
 
