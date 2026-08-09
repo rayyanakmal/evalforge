@@ -220,9 +220,12 @@ strong { color: var(--text); }
   background: var(--bg-soft);
   border-right: 1px solid var(--border);
 }
-/* Streamlit 1.61+ hides the collapse chevron until hover — force it visible */
+/* Streamlit 1.61+ hides the sidebar chevrons until hover — force them visible.
+   Covers both the collapse button AND the expand (reopen) button that appears
+   after the sidebar is collapsed; without this, you can collapse but not reopen. */
 [data-testid="stSidebarCollapseButton"],
-[data-testid="stSidebarCollapseButton"] button {
+[data-testid="stSidebarCollapseButton"] button,
+[data-testid="stExpandSidebarButton"] {
   visibility: visible !important;
   opacity: 1 !important;
 }
