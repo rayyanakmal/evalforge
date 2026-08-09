@@ -9,6 +9,7 @@ from .metrics import (
     compute_budget,
     summarize_trajectories,
 )
+from .capture import StepRecorder, record
 
 __all__ = [
     "compute_convergence",
@@ -18,4 +19,6 @@ __all__ = [
     "compute_recovery",
     "compute_budget",
     "summarize_trajectories",
+    "StepRecorder",
+    "record",
 ]
