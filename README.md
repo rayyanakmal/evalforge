@@ -43,7 +43,7 @@ Think of it as **unit tests for AI**. You define a list of questions your custom
 
 <div align="center">
   <a href="https://evalforge-wmdbf6rtfxjzh668zugy9d.streamlit.app/">
-    <img src="assets/dashboard.png" alt="EvalForge dashboard — side-by-side comparison of two agent versions with pass-rate cards and a regression matrix" width="700">
+    <img src="assets/dashboard.png" alt="EvalForge dashboard — real geo sample pair (geo_baseline vs geo_more_tools): same 100% pass rate, lookup tool calls doubled, caught by trajectory regression" width="700">
   </a>
   <p><em>Live app: summary cards, per-case comparison table, and regressions flagged in red.</em></p>
 </div>
@@ -52,7 +52,7 @@ Think of it as **unit tests for AI**. You define a list of questions your custom
 
 <div align="center">
   <a href="https://evalforge-wmdbf6rtfxjzh668zugy9d.streamlit.app/">
-    <img src="assets/trajectory-compare.png" alt="EvalForge trajectory regression — same pass rate, worse process (loops), caught by process metrics" width="700">
+    <img src="assets/trajectory-compare.png" alt="EvalForge trajectory report card — process metrics, per-tool rollup, step timeline, and the REGRESSED verdict on the journey" width="700">
   </a>
   <p><em>Process metrics per run, per-tool rollup, step timeline, and a REGRESSED / ok verdict on the journey.</em></p>
 </div>
@@ -347,6 +347,7 @@ concurrency: 10
 - [examples/geo_baseline.json](examples/geo_baseline.json) / [geo_more_tools.json](examples/geo_more_tools.json) / [geo_no_tool.json](examples/geo_no_tool.json) / [geo_memory_loopy.json](examples/geo_memory_loopy.json) — Committed sample runs (real DeepSeek, answers + trajectories)
 - [examples/gen_samples.py](examples/gen_samples.py) — Legacy v1/v2 regression-story data generator (output-only runs)
 - [examples/gen_demo_trajectories.py](examples/gen_demo_trajectories.py) — Legacy trajectory generator (clean vs loop-prone)
+- [scripts/capture_shots.py](scripts/capture_shots.py) — Playwright script that regenerates the README screenshots from the live app
 
 ---
 
