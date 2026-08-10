@@ -45,16 +45,7 @@ Think of it as **unit tests for AI**. You define a list of questions your custom
   <a href="https://evalforge-wmdbf6rtfxjzh668zugy9d.streamlit.app/">
     <img src="assets/dashboard.png" alt="EvalForge dashboard — real geo sample pair (geo_baseline vs geo_more_tools): same 100% pass rate, lookup tool calls doubled, caught by trajectory regression" width="700">
   </a>
-  <p><em>Live app: summary cards, per-case comparison table, and regressions flagged in red.</em></p>
-</div>
-
-### Trajectory view — grade the journey, not just the answer (v0.2.0)
-
-<div align="center">
-  <a href="https://evalforge-wmdbf6rtfxjzh668zugy9d.streamlit.app/">
-    <img src="assets/trajectory-compare.png" alt="EvalForge trajectory report card — process metrics, per-tool rollup, step timeline, and the REGRESSED verdict on the journey" width="700">
-  </a>
-  <p><em>Process metrics per run, per-tool rollup, step timeline, and a REGRESSED / ok verdict on the journey.</em></p>
+  <p><em>Live app: summary cards, per-case comparison table, regressions flagged in red, and the trajectory report card (process metrics, per-tool rollup, REGRESSED verdict).</em></p>
 </div>
 
 ---
@@ -340,8 +331,7 @@ concurrency: 10
 - [SPEC.md](SPEC.md) — Full behavior spec with acceptance criteria
 - [ARCHITECTURE.md](ARCHITECTURE.md) — Design, interfaces, extension points
 - [CHANGELOG.md](CHANGELOG.md) — Version history
-- [assets/dashboard.png](assets/dashboard.png) — Dashboard screenshot (v0.2.0)
-- [assets/trajectory-compare.png](assets/trajectory-compare.png) — Trajectory regression screenshot (v0.2.0)
+- [assets/dashboard.png](assets/dashboard.png) — Dashboard screenshot (v0.2.0, regenerable via scripts/capture_shots.py)
 - [examples/gen_realistic_samples.py](examples/gen_realistic_samples.py) — Real-run sample generator: tool-using geography agent, 4 runs / 3 comparison stories (real DeepSeek)
 - [examples/geo_facts.yaml](examples/geo_facts.yaml) — Geography QA dataset behind the samples (exact-match scoring)
 - [examples/geo_baseline.json](examples/geo_baseline.json) / [geo_more_tools.json](examples/geo_more_tools.json) / [geo_no_tool.json](examples/geo_no_tool.json) / [geo_memory_loopy.json](examples/geo_memory_loopy.json) — Committed sample runs (real DeepSeek, answers + trajectories)

@@ -1,9 +1,9 @@
-"""Capture fresh screenshots of the deployed EvalForge dashboard.
+"""Capture the README screenshot of the deployed EvalForge dashboard.
 
 - dashboard.png: full-page shot of the default sample pair
-  (Sample: same score, more tools) at 1440x3000 viewport.
-- trajectory-compare.png: viewport shot scrolled to the trajectory
-  regression section (same pass rate, worse process -> REGRESSED).
+  (Sample: same score, more tools) at 1440x3000 viewport — hero, summary
+  cards, comparison matrix, and the trajectory report card are all in one
+  shot (the trajectory section is redundant as a separate image).
 
 The Streamlit Cloud app is wrapped in an iframe; the outer page's full_page
 height tracks the viewport, so a tall viewport captures the app content.
@@ -58,15 +58,9 @@ def main() -> None:
               "| has geo_more_tools:", "geo_more_tools" in txt,
               "| has REGRESSED:", "REGRESSED" in txt)
 
-        # Shot 1: full page (hero + cards + matrix + trajectory section).
+        # Shot: full page (hero + cards + matrix + trajectory section).
         page.screenshot(path=f"{OUT}/dashboard.png", full_page=True)
         print("saved dashboard.png")
-
-        # Shot 2: scroll the trajectory regression section into the viewport top.
-        frame.evaluate("window.scrollTo(0, document.body.scrollHeight)")
-        page.wait_for_timeout(3_000)
-        page.screenshot(path=f"{OUT}/trajectory-compare.png", full_page=False)
-        print("saved trajectory-compare.png")
 
         browser.close()
 
