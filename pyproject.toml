@@ -1,5 +1,5 @@
 [project]
-name = "evalforge"
+name = "verdictlab"
 version = "0.2.0"
 description = "Eval-driven agent testing framework"
 requires-python = ">=3.11"
@@ -13,7 +13,7 @@ dependencies = [
 ]
 
 [project.scripts]
-evalforge = "evalforge.cli:app"
+verdictlab = "verdictlab.cli:app"
 
 [project.optional-dependencies]
 ui = [
@@ -26,7 +26,7 @@ testpaths = ["tests"]
 asyncio_mode = "auto"
 
 [tool.setuptools.packages.find]
-include = ["evalforge*"]
+include = ["verdictlab*"]
 
 [build-system]
 requires = ["setuptools>=68"]

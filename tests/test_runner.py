@@ -17,15 +17,15 @@ from datetime import datetime, timezone
 
 import pytest
 
-from evalforge.models.suite import TestSuite, TestCase, Expected, TestMetadata
-from evalforge.models.result import (
+from verdictlab.models.suite import TestSuite, TestCase, Expected, TestMetadata
+from verdictlab.models.result import (
     RunResult, TestResult, ScoreResult, Summary, TokenCount,
 )
-from evalforge.models.llm import LLMResponse, Usage
-from evalforge.scoring.base import Scorer
-from evalforge.scoring.exact import ExactScorer
-from evalforge.runner.executor import Executor, compare_results, ComparisonReport
-from evalforge.runner.retry import retry_with_backoff
+from verdictlab.models.llm import LLMResponse, Usage
+from verdictlab.scoring.base import Scorer
+from verdictlab.scoring.exact import ExactScorer
+from verdictlab.runner.executor import Executor, compare_results, ComparisonReport
+from verdictlab.runner.retry import retry_with_backoff
 
 
 # ---------------------------------------------------------------------------

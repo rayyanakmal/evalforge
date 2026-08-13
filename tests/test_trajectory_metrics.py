@@ -6,7 +6,7 @@ computed by hand from the fixture shapes — see comments per test.
 
 import pytest
 
-from evalforge.models import TestResult, Trajectory, TrajectoryStep
+from verdictlab.models import TestResult, Trajectory, TrajectoryStep
 
 
 def step(index, tool="search", **overrides):
@@ -21,19 +21,19 @@ def traj(steps, final_answer=None):
 
 class TestConvergence:
     def test_empty_trajectory(self):
-        from evalforge.trajectory.metrics import compute_convergence
+        from verdictlab.trajectory.metrics import compute_convergence
         m = compute_convergence(traj([]))
         assert m["converged"] is False
         assert m["terminal_reason"] == "empty"
 
     def test_final_answer_converged(self):
-        from evalforge.trajectory.metrics import compute_convergence
+        from verdictlab.trajectory.metrics import compute_convergence
         m = compute_convergence(traj([step(0)], final_answer="ok"))
         assert m["converged"] is True
         assert m["terminal_reason"] == "final_answer"
 
     def test_ends_in_error(self):
-        from evalforge.trajectory.metrics import compute_convergence
+        from verdictlab.trajectory.metrics import compute_convergence
         m = compute_convergence(traj([
             step(0),
             step(1, tool="calc", error="boom"),
@@ -42,7 +42,7 @@ class TestConvergence:
         assert m["terminal_reason"] == "error"
 
     def test_no_answer_no_error_is_max_steps(self):
-        from evalforge.trajectory.metrics import compute_convergence
+        from verdictlab.trajectory.metrics import compute_convergence
         m = compute_convergence(traj([step(0), step(1, tool="calc")]))
         assert m["converged"] is False
         assert m["terminal_reason"] == "max_steps"
@@ -51,7 +51,7 @@ class TestConvergence:
 class TestEfficiency:
     def test_steps_and_tool_calls_exclude_llm(self):
         """llm steps count as steps but NOT as tool calls."""
-        from evalforge.trajectory.metrics import compute_efficiency
+        from verdictlab.trajectory.metrics import compute_efficiency
         t = traj([
             step(0, tool="llm"),
             step(1, tool="search", args={"q": "x"}),
@@ -66,7 +66,7 @@ class TestEfficiency:
     def test_repeated_calls_and_max_repeat_run(self):
         """step1 repeats step0's call (search q=a) -> repeated; step3 repeats
         step0 again but non-consecutive. The consecutive run is 2 (step0+step1)."""
-        from evalforge.trajectory.metrics import compute_efficiency
+        from verdictlab.trajectory.metrics import compute_efficiency
         t = traj([
             step(0, args={"q": "a"}),
             step(1, args={"q": "a"}),           # repeat of (0)
@@ -80,7 +80,7 @@ class TestEfficiency:
         assert m["max_repeat_run"] == 2
 
     def test_zero_repeats_clean_trajectory(self):
-        from evalforge.trajectory.metrics import compute_efficiency
+        from verdictlab.trajectory.metrics import compute_efficiency
         t = traj([
             step(0, args={"q": "a"}),
             step(1, tool="calc", args={"expr": "1+1"}),
@@ -90,7 +90,7 @@ class TestEfficiency:
         assert m["max_repeat_run"] == 1
 
     def test_empty_trajectory_zeros(self):
-        from evalforge.trajectory.metrics import compute_efficiency
+        from verdictlab.trajectory.metrics import compute_efficiency
         m = compute_efficiency(traj([]))
         assert m["steps"] == 0
         assert m["tool_calls"] == 0
@@ -101,7 +101,7 @@ class TestEfficiency:
 class TestToolStats:
     def test_per_tool_rollup(self):
         """search called twice (1 error), calc once. Latency and cost summed."""
-        from evalforge.trajectory.metrics import compute_tool_stats
+        from verdictlab.trajectory.metrics import compute_tool_stats
         t = traj([
             step(0, latency_ms=100.0, cost_usd=0.001),
             step(1, tool="calc", args={"expr": "1+1"}, latency_ms=20.0, cost_usd=0.0001),
@@ -120,7 +120,7 @@ class TestToolStats:
         assert m["tool_diversity"] == 2
 
     def test_empty_trajectory(self):
-        from evalforge.trajectory.metrics import compute_tool_stats
+        from verdictlab.trajectory.metrics import compute_tool_stats
         m = compute_tool_stats(traj([]))
         assert m["per_tool"] == {}
         assert m["tool_diversity"] == 0
@@ -128,7 +128,7 @@ class TestToolStats:
 
 class TestValidity:
     def test_unknown_tool_detected(self):
-        from evalforge.trajectory.metrics import compute_validity
+        from verdictlab.trajectory.metrics import compute_validity
         t = traj([
             step(0),
             step(1, tool="calc"),
@@ -138,21 +138,21 @@ class TestValidity:
         assert m["invalid_tool_names"] == ["calc"]
 
     def test_all_valid(self):
-        from evalforge.trajectory.metrics import compute_validity
+        from verdictlab.trajectory.metrics import compute_validity
         t = traj([step(0), step(1, tool="calc")], final_answer="x")
         m = compute_validity(t, allowed_tools={"search", "calc"})
         assert m["invalid_calls"] == 0
         assert m["invalid_tool_names"] == []
 
     def test_no_allowed_tools_skips(self):
-        from evalforge.trajectory.metrics import compute_validity
+        from verdictlab.trajectory.metrics import compute_validity
         m = compute_validity(traj([step(0)]), allowed_tools=None)
         assert m is None
 
 
 class TestRecovery:
     def test_recovered_after_error(self):
-        from evalforge.trajectory.metrics import compute_recovery
+        from verdictlab.trajectory.metrics import compute_recovery
         t = traj([
             step(0),
             step(1, tool="calc", error="boom"),
@@ -164,7 +164,7 @@ class TestRecovery:
         assert m["died_on_error"] is False
 
     def test_died_on_error(self):
-        from evalforge.trajectory.metrics import compute_recovery
+        from verdictlab.trajectory.metrics import compute_recovery
         t = traj([step(0), step(1, error="boom")])
         m = compute_recovery(t)
         assert m["error_steps"] == 1
@@ -172,7 +172,7 @@ class TestRecovery:
         assert m["died_on_error"] is True
 
     def test_no_errors(self):
-        from evalforge.trajectory.metrics import compute_recovery
+        from verdictlab.trajectory.metrics import compute_recovery
         m = compute_recovery(traj([step(0), step(1)], final_answer="x"))
         assert m["error_steps"] == 0
         assert m["recovered_after_error"] == 0
@@ -181,7 +181,7 @@ class TestRecovery:
 
 class TestBudget:
     def test_under_budget(self):
-        from evalforge.trajectory.metrics import compute_budget
+        from verdictlab.trajectory.metrics import compute_budget
         t = traj([step(0, cost_usd=0.001), step(1, cost_usd=0.002)])
         m = compute_budget(t, cost_limit_usd=0.01, max_steps=10)
         assert m["over_budget"] is False
@@ -189,19 +189,19 @@ class TestBudget:
         assert m["total_cost_usd"] == 0.003
 
     def test_over_budget(self):
-        from evalforge.trajectory.metrics import compute_budget
+        from verdictlab.trajectory.metrics import compute_budget
         t = traj([step(0, cost_usd=0.02)])
         m = compute_budget(t, cost_limit_usd=0.01, max_steps=10)
         assert m["over_budget"] is True
 
     def test_over_max_steps(self):
-        from evalforge.trajectory.metrics import compute_budget
+        from verdictlab.trajectory.metrics import compute_budget
         t = traj([step(i) for i in range(5)])
         m = compute_budget(t, cost_limit_usd=None, max_steps=3)
         assert m["over_max_steps"] is True
 
     def test_no_limits_no_flags(self):
-        from evalforge.trajectory.metrics import compute_budget
+        from verdictlab.trajectory.metrics import compute_budget
         m = compute_budget(traj([step(0)]), cost_limit_usd=None, max_steps=None)
         assert m["over_budget"] is False
         assert m["over_max_steps"] is False
@@ -225,7 +225,7 @@ class TestSummarize:
         pass_rate_by_tool_usage: search used by all 3 -> 1/3 pass (t2 only);
                                  calc used by t2 only -> 1/1 pass.
         """
-        from evalforge.trajectory.metrics import summarize_trajectories
+        from verdictlab.trajectory.metrics import summarize_trajectories
         results = [
             self._result("t1", [
                 step(0, args={"q": "a"}),
@@ -251,7 +251,7 @@ class TestSummarize:
         assert s["pass_rate_by_tool_usage"]["calc"] == pytest.approx(1.0)
 
     def test_results_without_trajectory_skipped(self):
-        from evalforge.trajectory.metrics import summarize_trajectories
+        from verdictlab.trajectory.metrics import summarize_trajectories
         results = [
             TestResult(id="no-traj", status="pass"),   # v1-shaped, no trajectory
             TestResult(id="with-traj", status="pass",
@@ -262,7 +262,7 @@ class TestSummarize:
         assert s["total_loops"] == 0
 
     def test_empty_input(self):
-        from evalforge.trajectory.metrics import summarize_trajectories
+        from verdictlab.trajectory.metrics import summarize_trajectories
         s = summarize_trajectories([])
         assert s["mean_steps"] == 0.0
         assert s["mean_tool_calls"] == 0.0

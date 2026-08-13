@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to EvalForge are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/); versioning follows [SemVer](https://semver.org/).
+All notable changes to VerdictLab are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/); versioning follows [SemVer](https://semver.org/).
 
 ## [Unreleased] - 2026-08-10
 
@@ -9,7 +9,7 @@ All notable changes to EvalForge are documented here. Format follows [Keep a Cha
 The dashboard's sample data is rebuilt from the ground up. Previously the two
 built-in options were two different file formats (output-only RunResults vs a
 raw trajectory JSON that the app wrapped with fabricated all-pass answers).
-Now all samples are real `evalforge run` outputs — answers AND trajectories,
+Now all samples are real `verdictlab run` outputs — answers AND trajectories,
 one RunResult file per run, loaded through the exact same `load_run` path as
 uploads:
 
@@ -31,9 +31,9 @@ uploads:
 - Dashboard sample loader errors now name the missing file and the
   regeneration command.
 
-### Added — real execution in `evalforge run` (one run, both dimensions)
+### Added — real execution in `verdictlab run` (one run, both dimensions)
 
-`evalforge run` previously only supported `--no-llm` dry runs. It now executes
+`verdictlab run` previously only supported `--no-llm` dry runs. It now executes
 a suite against a configured provider and captures trajectories into the same
 report, so a single run produces BOTH the answer-level results AND the process
 journey:
@@ -48,10 +48,10 @@ journey:
 - **Per-test scoring dispatch** (`scoring/registry.py`) — `RegistryScorer` routes each
   response to the scorer matching its `expected.type`, so mixed exact + rubric suites
   run in one executor.
-- **CLI** — `evalforge run suite.yaml` now works for real (previously errored with
-  "Real LLM execution requires a configured provider"). `evalforge run suite.yaml
+- **CLI** — `verdictlab run suite.yaml` now works for real (previously errored with
+  "Real LLM execution requires a configured provider"). `verdictlab run suite.yaml
   --provider deepseek --model deepseek-chat` compares agents/versions.
-- **Workflow** — run once per agent, then `evalforge compare a.json b.json --trajectory`
+- **Workflow** — run once per agent, then `verdictlab compare a.json b.json --trajectory`
   shows answer diff AND trajectory regression from the same files; the dashboard upload
   shows both views.
 
@@ -59,7 +59,7 @@ journey:
 
 ### Added — Trajectory-level agent evaluation
 
-The big upgrade: EvalForge now grades the **journey**, not just the final answer.
+The big upgrade: VerdictLab now grades the **journey**, not just the final answer.
 
 - **Trajectory schema** (`models/trajectory.py`) — OTel-style span shape: tool name, args, result, thought, latency, tokens, cost, error, ordering. Backward-compatible: `TestResult.trajectory` is optional; v0.1 result files parse unchanged.
 - **Process metrics** (`trajectory/metrics.py`, pure code, no LLM judge) — convergence, efficiency (steps/tool-calls per task), loop detection (identical repeated calls), tool validity, error recovery, per-tool cost/latency, budget adherence, per-run aggregation. All deterministic, hand-computed golden tests.

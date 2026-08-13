@@ -1,6 +1,6 @@
-"""Tests for the real-execution runner (evalforge.cli.run_real).
+"""Tests for the real-execution runner (verdictlab.cli.run_real).
 
-Covers the v0.2.x promise: `evalforge run` executes against a configured
+Covers the v0.2.x promise: `verdictlab run` executes against a configured
 provider AND captures trajectories into the same report, so one file
 carries both the answer-level data and the process journey.
 """
@@ -11,10 +11,10 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from evalforge.config import GateConfig, ProviderConfig
-from evalforge.models.llm import LLMResponse, Message, Usage
-from evalforge.models.suite import TestSuite, TestCase, Expected
-from evalforge.cli.run_real import (
+from verdictlab.config import GateConfig, ProviderConfig
+from verdictlab.models.llm import LLMResponse, Message, Usage
+from verdictlab.models.suite import TestSuite, TestCase, Expected
+from verdictlab.cli.run_real import (
     build_clients,
     build_generate_fn,
     build_scorer,
@@ -103,14 +103,14 @@ def test_resolve_api_key_from_env(monkeypatch):
 def test_resolve_api_key_missing(monkeypatch):
     monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
     # Point at a temp home with no .env
-    with patch("evalforge.cli.run_real.Path.home") as home:
+    with patch("verdictlab.cli.run_real.Path.home") as home:
         home.return_value = Path("/nonexistent-home")
         assert resolve_api_key("deepseek") is None
 
 
 def test_build_clients_defaults_to_deepseek(monkeypatch):
     monkeypatch.setenv("DEEPSEEK_API_KEY", "sk-test")
-    with patch("evalforge.cli.run_real.create_client") as create:
+    with patch("verdictlab.cli.run_real.create_client") as create:
         create.return_value = _FakeClient()
         target, judge = build_clients(None, None, None)
         assert target is judge  # same client reused when no judge configured
@@ -121,9 +121,9 @@ def test_build_clients_uses_config():
         target=ProviderConfig(provider="deepseek", model="deepseek-chat"),
         judge=ProviderConfig(provider="deepseek", model="deepseek-chat"),
     )
-    with patch("evalforge.cli.run_real.create_client") as create:
+    with patch("verdictlab.cli.run_real.create_client") as create:
         create.return_value = _FakeClient()
-        with patch("evalforge.cli.run_real.resolve_api_key", return_value="sk-x"):
+        with patch("verdictlab.cli.run_real.resolve_api_key", return_value="sk-x"):
             target, judge = build_clients(config, None, None)
             create.assert_called_once()
             assert target is judge
@@ -148,7 +148,7 @@ def test_build_scorer_registers_exact_and_rubric():
 def test_run_suite_returns_trajectory_summary(monkeypatch):
     monkeypatch.setenv("DEEPSEEK_API_KEY", "sk-test")
 
-    with patch("evalforge.cli.run_real.build_clients") as build:
+    with patch("verdictlab.cli.run_real.build_clients") as build:
         client = _FakeClient(responses={"What is the capital of France?": "Paris"})
         build.return_value = (client, client)
 
@@ -172,7 +172,7 @@ def test_run_suite_json_roundtrip_preserves_trajectory(monkeypatch, tmp_path):
     """The saved JSON report must carry trajectories so compare --trajectory works."""
     monkeypatch.setenv("DEEPSEEK_API_KEY", "sk-test")
 
-    with patch("evalforge.cli.run_real.build_clients") as build:
+    with patch("verdictlab.cli.run_real.build_clients") as build:
         client = _FakeClient(responses={"What is the capital of France?": "Paris"})
         build.return_value = (client, client)
 
@@ -201,7 +201,7 @@ def test_run_suite_accepts_custom_generate_fn(monkeypatch):
             cost_usd=0.0001,
         )
 
-    with patch("evalforge.cli.run_real.build_clients") as build:
+    with patch("verdictlab.cli.run_real.build_clients") as build:
         client = _FakeClient()
         build.return_value = (client, client)
 

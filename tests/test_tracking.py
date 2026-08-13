@@ -13,16 +13,16 @@ import asyncio
 
 import pytest
 
-from evalforge.models.result import (
+from verdictlab.models.result import (
     TestResult, TokenCount, ScoreResult, Summary, RunResult, TrackingSummary,
 )
-from evalforge.models.suite import TestSuite, TestCase, Expected
-from evalforge.models.llm import LLMResponse, Usage
-from evalforge.scoring.exact import ExactScorer
-from evalforge.tracking.base import Tracker
-from evalforge.tracking.cost import CostTracker
-from evalforge.tracking.latency import LatencyTracker
-from evalforge.runner.executor import Executor, compare_results, ChangeItem
+from verdictlab.models.suite import TestSuite, TestCase, Expected
+from verdictlab.models.llm import LLMResponse, Usage
+from verdictlab.scoring.exact import ExactScorer
+from verdictlab.tracking.base import Tracker
+from verdictlab.tracking.cost import CostTracker
+from verdictlab.tracking.latency import LatencyTracker
+from verdictlab.runner.executor import Executor, compare_results, ChangeItem
 
 
 # ---------------------------------------------------------------------------

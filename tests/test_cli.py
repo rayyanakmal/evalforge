@@ -2,9 +2,9 @@
 US-5: CLI & Report Output
 
 Tests for all acceptance criteria and edge cases:
-  AC-5.1: evalforge run <suite> → stdout table + JSON report
-  AC-5.2: evalforge compare <baseline> <candidate> → diff table
-  AC-5.3: evalforge init → scaffolds project
+  AC-5.1: verdictlab run <suite> → stdout table + JSON report
+  AC-5.2: verdictlab compare <baseline> <candidate> → diff table
+  AC-5.3: verdictlab init → scaffolds project
   Edge:  compare with non-existent baseline → error with paths searched
   Edge:  init in directory with existing config → prompts confirmation (or --force)
 
@@ -24,10 +24,10 @@ from unittest.mock import patch, MagicMock
 import pytest
 from typer.testing import CliRunner
 
-from evalforge.models.result import (
+from verdictlab.models.result import (
     RunResult, TestResult, ScoreResult, Summary, TokenCount, DimensionScore,
 )
-from evalforge.models.suite import TestSuite, TestCase, Expected
+from verdictlab.models.suite import TestSuite, TestCase, Expected
 
 
 # ---------------------------------------------------------------------------
@@ -153,7 +153,7 @@ def sample_suite_yaml() -> str:
     """Sample suite YAML content."""
     return """
 name: Example Suite
-description: A sample test suite for evalforge
+description: A sample test suite for verdictlab
 tests:
   - id: hello-exact
     prompt: "Reply with just the word: Hello"
@@ -177,20 +177,20 @@ class TestReporterABC:
 
     def test_reporter_is_abstract(self):
         """Reporter ABC cannot be instantiated directly."""
-        from evalforge.reporting.base import Reporter
+        from verdictlab.reporting.base import Reporter
         with pytest.raises(TypeError):
             Reporter()  # type: ignore[abstract]
 
     def test_reporter_defines_generate(self):
         """Reporter ABC requires generate() method."""
-        from evalforge.reporting.base import Reporter
+        from verdictlab.reporting.base import Reporter
         assert hasattr(Reporter, "generate")
         from abc import abstractmethod
         assert Reporter.generate.__isabstractmethod__
 
     def test_reporter_defines_write(self):
         """Reporter ABC requires write() method."""
-        from evalforge.reporting.base import Reporter
+        from verdictlab.reporting.base import Reporter
         assert hasattr(Reporter, "write")
         from abc import abstractmethod
         assert Reporter.write.__isabstractmethod__
@@ -205,7 +205,7 @@ class TestJSONReporter:
 
     def test_generate_returns_valid_json(self, sample_run_result):
         """generate() returns valid JSON string."""
-        from evalforge.reporting.json_reporter import JSONReporter
+        from verdictlab.reporting.json_reporter import JSONReporter
         reporter = JSONReporter()
         output = reporter.generate(sample_run_result)
         # Should be valid JSON
@@ -216,7 +216,7 @@ class TestJSONReporter:
 
     def test_generate_contains_all_test_fields(self, sample_run_result):
         """Generated JSON includes all expected test result fields."""
-        from evalforge.reporting.json_reporter import JSONReporter
+        from verdictlab.reporting.json_reporter import JSONReporter
         reporter = JSONReporter()
         output = reporter.generate(sample_run_result)
         data = json.loads(output)
@@ -230,7 +230,7 @@ class TestJSONReporter:
 
     def test_generate_empty_suite(self, empty_run_result):
         """generate() handles empty suite gracefully."""
-        from evalforge.reporting.json_reporter import JSONReporter
+        from verdictlab.reporting.json_reporter import JSONReporter
         reporter = JSONReporter()
         output = reporter.generate(empty_run_result)
         data = json.loads(output)
@@ -239,7 +239,7 @@ class TestJSONReporter:
 
     def test_write_creates_file(self, sample_run_result):
         """write() creates a JSON file at the specified path."""
-        from evalforge.reporting.json_reporter import JSONReporter
+        from verdictlab.reporting.json_reporter import JSONReporter
         reporter = JSONReporter()
         with tempfile.TemporaryDirectory() as tmpdir:
             out_path = Path(tmpdir) / "report.json"
@@ -251,7 +251,7 @@ class TestJSONReporter:
 
     def test_write_creates_parent_directories(self, sample_run_result):
         """write() creates parent directories if they don't exist."""
-        from evalforge.reporting.json_reporter import JSONReporter
+        from verdictlab.reporting.json_reporter import JSONReporter
         reporter = JSONReporter()
         with tempfile.TemporaryDirectory() as tmpdir:
             nested = Path(tmpdir) / "deep" / "nested" / "report.json"
@@ -260,8 +260,8 @@ class TestJSONReporter:
 
     def test_is_reporter_subclass(self):
         """JSONReporter is a valid Reporter subclass."""
-        from evalforge.reporting.base import Reporter
-        from evalforge.reporting.json_reporter import JSONReporter
+        from verdictlab.reporting.base import Reporter
+        from verdictlab.reporting.json_reporter import JSONReporter
         assert issubclass(JSONReporter, Reporter)
 
 
@@ -274,7 +274,7 @@ class TestConsoleReporter:
 
     def test_generate_returns_string(self, sample_run_result):
         """generate() returns a non-empty string."""
-        from evalforge.reporting.console_reporter import ConsoleReporter
+        from verdictlab.reporting.console_reporter import ConsoleReporter
         reporter = ConsoleReporter()
         output = reporter.generate(sample_run_result)
         assert isinstance(output, str)
@@ -282,7 +282,7 @@ class TestConsoleReporter:
 
     def test_generate_contains_test_ids(self, sample_run_result):
         """Generated output mentions test IDs."""
-        from evalforge.reporting.console_reporter import ConsoleReporter
+        from verdictlab.reporting.console_reporter import ConsoleReporter
         reporter = ConsoleReporter()
         output = reporter.generate(sample_run_result)
         assert "test-1" in output
@@ -291,7 +291,7 @@ class TestConsoleReporter:
 
     def test_generate_contains_pass_fail_status(self, sample_run_result):
         """Generated output shows pass/fail status."""
-        from evalforge.reporting.console_reporter import ConsoleReporter
+        from verdictlab.reporting.console_reporter import ConsoleReporter
         reporter = ConsoleReporter()
         output = reporter.generate(sample_run_result)
         # Should mention pass/fail
@@ -300,14 +300,14 @@ class TestConsoleReporter:
 
     def test_generate_contains_summary_stats(self, sample_run_result):
         """Generated output includes summary statistics."""
-        from evalforge.reporting.console_reporter import ConsoleReporter
+        from verdictlab.reporting.console_reporter import ConsoleReporter
         reporter = ConsoleReporter()
         output = reporter.generate(sample_run_result)
         assert "total" in output.lower() or "summary" in output.lower()
 
     def test_generate_empty_suite(self, empty_run_result):
         """generate() handles empty suite gracefully."""
-        from evalforge.reporting.console_reporter import ConsoleReporter
+        from verdictlab.reporting.console_reporter import ConsoleReporter
         reporter = ConsoleReporter()
         output = reporter.generate(empty_run_result)
         assert isinstance(output, str)
@@ -316,7 +316,7 @@ class TestConsoleReporter:
 
     def test_write_outputs_to_stdout(self, sample_run_result, capsys):
         """write() prints the generated output to stdout."""
-        from evalforge.reporting.console_reporter import ConsoleReporter
+        from verdictlab.reporting.console_reporter import ConsoleReporter
         reporter = ConsoleReporter()
         reporter.write(sample_run_result, Path("/dev/null"))
         captured = capsys.readouterr()
@@ -325,8 +325,8 @@ class TestConsoleReporter:
 
     def test_is_reporter_subclass(self):
         """ConsoleReporter is a valid Reporter subclass."""
-        from evalforge.reporting.base import Reporter
-        from evalforge.reporting.console_reporter import ConsoleReporter
+        from verdictlab.reporting.base import Reporter
+        from verdictlab.reporting.console_reporter import ConsoleReporter
         assert issubclass(ConsoleReporter, Reporter)
 
 
@@ -339,7 +339,7 @@ class TestDiffReporter:
 
     def test_generate_diff_returns_string(self, baseline_result, candidate_result):
         """generate_diff() returns a non-empty string."""
-        from evalforge.reporting.diff_reporter import DiffReporter
+        from verdictlab.reporting.diff_reporter import DiffReporter
         reporter = DiffReporter()
         output = reporter.generate_diff(baseline_result, candidate_result)
         assert isinstance(output, str)
@@ -347,7 +347,7 @@ class TestDiffReporter:
 
     def test_generate_diff_shows_test_names(self, baseline_result, candidate_result):
         """Diff output includes test names."""
-        from evalforge.reporting.diff_reporter import DiffReporter
+        from verdictlab.reporting.diff_reporter import DiffReporter
         reporter = DiffReporter()
         output = reporter.generate_diff(baseline_result, candidate_result)
         assert "t1" in output
@@ -355,7 +355,7 @@ class TestDiffReporter:
 
     def test_generate_diff_shows_status_changes(self, baseline_result, candidate_result):
         """Diff output shows status: t2 regressed from pass to fail."""
-        from evalforge.reporting.diff_reporter import DiffReporter
+        from verdictlab.reporting.diff_reporter import DiffReporter
         reporter = DiffReporter()
         output = reporter.generate_diff(baseline_result, candidate_result)
         # t2 goes from pass→fail (regression)
@@ -364,7 +364,7 @@ class TestDiffReporter:
 
     def test_generate_diff_shows_cost_delta(self, baseline_result, candidate_result):
         """Diff output includes cost change information."""
-        from evalforge.reporting.diff_reporter import DiffReporter
+        from verdictlab.reporting.diff_reporter import DiffReporter
         reporter = DiffReporter()
         output = reporter.generate_diff(baseline_result, candidate_result)
         # Should mention cost or delta
@@ -372,7 +372,7 @@ class TestDiffReporter:
 
     def test_generate_diff_shows_latency_delta(self, baseline_result, candidate_result):
         """Diff output includes latency change information."""
-        from evalforge.reporting.diff_reporter import DiffReporter
+        from verdictlab.reporting.diff_reporter import DiffReporter
         reporter = DiffReporter()
         output = reporter.generate_diff(baseline_result, candidate_result)
         # Should mention latency
@@ -380,7 +380,7 @@ class TestDiffReporter:
 
     def test_generate_diff_both_empty(self):
         """generate_diff() handles two empty results."""
-        from evalforge.reporting.diff_reporter import DiffReporter
+        from verdictlab.reporting.diff_reporter import DiffReporter
         ts = datetime.now(timezone.utc).isoformat()
         empty1 = RunResult(suite_name="a", timestamp=ts, duration_ms=0.0, tests=[],
                            summary=Summary())
@@ -393,31 +393,31 @@ class TestDiffReporter:
 
     def test_is_reporter_subclass(self):
         """DiffReporter is a valid Reporter subclass."""
-        from evalforge.reporting.base import Reporter
-        from evalforge.reporting.diff_reporter import DiffReporter
+        from verdictlab.reporting.base import Reporter
+        from verdictlab.reporting.diff_reporter import DiffReporter
         assert issubclass(DiffReporter, Reporter)
 
 
 # ===================================================================
-# CLI: AC-5.3 — evalforge init
+# CLI: AC-5.3 — verdictlab init
 # ===================================================================
 
 class TestCLIInit:
-    """Tests for evalforge init command (AC-5.3)."""
+    """Tests for verdictlab init command (AC-5.3)."""
 
     def test_init_creates_config_file(self, runner):
-        """evalforge init creates evalforge.yaml in the target directory."""
+        """verdictlab init creates verdictlab.yaml in the target directory."""
         with tempfile.TemporaryDirectory() as tmpdir:
             result = runner.invoke(
                 _get_app(),
                 ["init", tmpdir, "--force"],
             )
             assert result.exit_code == 0
-            config_path = Path(tmpdir) / "evalforge.yaml"
+            config_path = Path(tmpdir) / "verdictlab.yaml"
             assert config_path.exists()
 
     def test_init_creates_test_suites_folder(self, runner):
-        """evalforge init creates test-suites/ folder with example suite."""
+        """verdictlab init creates test-suites/ folder with example suite."""
         with tempfile.TemporaryDirectory() as tmpdir:
             result = runner.invoke(
                 _get_app(),
@@ -432,7 +432,7 @@ class TestCLIInit:
             assert suite_file.exists()
 
     def test_init_creates_gitignore(self, runner):
-        """evalforge init creates .gitignore with evalforge-output/ entry."""
+        """verdictlab init creates .gitignore with verdictlab-output/ entry."""
         with tempfile.TemporaryDirectory() as tmpdir:
             result = runner.invoke(
                 _get_app(),
@@ -442,7 +442,7 @@ class TestCLIInit:
             gitignore = Path(tmpdir) / ".gitignore"
             assert gitignore.exists()
             content = gitignore.read_text()
-            assert "evalforge-output" in content
+            assert "verdictlab-output" in content
 
     def test_init_example_suite_is_valid_yaml(self, runner):
         """The example suite created by init is valid YAML."""
@@ -460,24 +460,24 @@ class TestCLIInit:
             assert "tests" in data
 
     def test_init_creates_valid_config_yaml(self, runner):
-        """The evalforge.yaml created by init is loadable."""
+        """The verdictlab.yaml created by init is loadable."""
         with tempfile.TemporaryDirectory() as tmpdir:
             result = runner.invoke(
                 _get_app(),
                 ["init", tmpdir, "--force"],
             )
             assert result.exit_code == 0
-            from evalforge.config import load_config
-            config = load_config(Path(tmpdir) / "evalforge.yaml")
+            from verdictlab.config import load_config
+            config = load_config(Path(tmpdir) / "verdictlab.yaml")
             assert config is not None
             assert len(config.suites) > 0
 
     def test_init_with_existing_config_and_force(self, runner):
-        """init --force overwrites existing evalforge.yaml."""
+        """init --force overwrites existing verdictlab.yaml."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            config_path = Path(tmpdir) / "evalforge.yaml"
+            config_path = Path(tmpdir) / "verdictlab.yaml"
             # Pre-create a different config
-            from evalforge.config import GateConfig, SuiteConfig, save_config
+            from verdictlab.config import GateConfig, SuiteConfig, save_config
             original = GateConfig(
                 baseline_dir="custom/",
                 suites=[SuiteConfig(path="old.yaml")],
@@ -493,13 +493,13 @@ class TestCLIInit:
             assert result.exit_code == 0
 
             # Should have been overwritten
-            from evalforge.config import load_config
+            from verdictlab.config import load_config
             new_config = load_config(config_path)
             # Should be the scaffolded config, not the old one
             assert new_config.concurrency != 55
 
     def test_init_defaults_to_current_directory(self, runner):
-        """evalforge init with no path defaults to current directory."""
+        """verdictlab init with no path defaults to current directory."""
         with tempfile.TemporaryDirectory() as tmpdir:
             import os
             original_cwd = os.getcwd()
@@ -510,27 +510,27 @@ class TestCLIInit:
                     ["init", "--force"],
                 )
                 assert result.exit_code == 0
-                assert Path("evalforge.yaml").exists()
+                assert Path("verdictlab.yaml").exists()
                 assert Path("test-suites").is_dir()
             finally:
                 os.chdir(original_cwd)
 
 
 # ===================================================================
-# CLI: AC-5.1 — evalforge run
+# CLI: AC-5.1 — verdictlab run
 # ===================================================================
 
 class TestCLIRun:
-    """Tests for evalforge run command (AC-5.1)."""
+    """Tests for verdictlab run command (AC-5.1)."""
 
     def test_run_requires_suite_argument(self, runner):
-        """evalforge run without a suite path shows usage."""
+        """verdictlab run without a suite path shows usage."""
         result = runner.invoke(_get_app(), ["run"])
         # Should fail with missing argument or show help
         assert result.exit_code != 0 or "usage" in result.output.lower()
 
     def test_run_with_missing_suite_file(self, runner):
-        """evalforge run with non-existent suite file shows error."""
+        """verdictlab run with non-existent suite file shows error."""
         result = runner.invoke(
             _get_app(),
             ["run", "/nonexistent/suite.yaml"],
@@ -538,7 +538,7 @@ class TestCLIRun:
         assert result.exit_code != 0
 
     def test_run_accepts_output_dir_option(self, runner, sample_suite_yaml):
-        """evalforge run accepts --output-dir option."""
+        """verdictlab run accepts --output-dir option."""
         with tempfile.TemporaryDirectory() as tmpdir:
             suite_path = Path(tmpdir) / "suite.yaml"
             suite_path.write_text(sample_suite_yaml)
@@ -553,7 +553,7 @@ class TestCLIRun:
             # This test validates the option is accepted
 
     def test_run_accepts_concurrency_option(self, runner, sample_suite_yaml):
-        """evalforge run accepts --concurrency option."""
+        """verdictlab run accepts --concurrency option."""
         with tempfile.TemporaryDirectory() as tmpdir:
             suite_path = Path(tmpdir) / "suite.yaml"
             suite_path.write_text(sample_suite_yaml)
@@ -565,11 +565,11 @@ class TestCLIRun:
             # Validates the option is accepted without error
 
     def test_run_with_no_llm_flag_uses_dry_run(self, runner, sample_suite_yaml):
-        """evalforge run --no-llm performs a dry run without calling LLMs."""
+        """verdictlab run --no-llm performs a dry run without calling LLMs."""
         with tempfile.TemporaryDirectory() as tmpdir:
             suite_path = Path(tmpdir) / "suite.yaml"
             suite_path.write_text(sample_suite_yaml)
-            out_dir = Path(tmpdir) / "evalforge-output"
+            out_dir = Path(tmpdir) / "verdictlab-output"
 
             result = runner.invoke(
                 _get_app(),
@@ -580,11 +580,11 @@ class TestCLIRun:
             assert len(result.output) > 0
 
     def test_run_with_no_llm_creates_json_report(self, runner, sample_suite_yaml):
-        """evalforge run --no-llm saves JSON report to output directory."""
+        """verdictlab run --no-llm saves JSON report to output directory."""
         with tempfile.TemporaryDirectory() as tmpdir:
             suite_path = Path(tmpdir) / "suite.yaml"
             suite_path.write_text(sample_suite_yaml)
-            out_dir = Path(tmpdir) / "evalforge-output"
+            out_dir = Path(tmpdir) / "verdictlab-output"
 
             result = runner.invoke(
                 _get_app(),
@@ -605,11 +605,11 @@ class TestCLIRun:
             assert "tests" in report_data
 
     def test_run_outputs_table_to_stdout(self, runner, sample_suite_yaml):
-        """evalforge run outputs results table to stdout."""
+        """verdictlab run outputs results table to stdout."""
         with tempfile.TemporaryDirectory() as tmpdir:
             suite_path = Path(tmpdir) / "suite.yaml"
             suite_path.write_text(sample_suite_yaml)
-            out_dir = Path(tmpdir) / "evalforge-output"
+            out_dir = Path(tmpdir) / "verdictlab-output"
 
             result = runner.invoke(
                 _get_app(),
@@ -620,19 +620,19 @@ class TestCLIRun:
 
 
 # ===================================================================
-# CLI: AC-5.2 — evalforge compare
+# CLI: AC-5.2 — verdictlab compare
 # ===================================================================
 
 class TestCLICompare:
-    """Tests for evalforge compare command (AC-5.2)."""
+    """Tests for verdictlab compare command (AC-5.2)."""
 
     def test_compare_requires_two_arguments(self, runner):
-        """evalforge compare requires baseline and candidate paths."""
+        """verdictlab compare requires baseline and candidate paths."""
         result = runner.invoke(_get_app(), ["compare"])
         assert result.exit_code != 0 or "usage" in result.output.lower()
 
     def test_compare_with_valid_reports(self, runner, baseline_result, candidate_result):
-        """evalforge compare with valid baseline and candidate JSON reports."""
+        """verdictlab compare with valid baseline and candidate JSON reports."""
         with tempfile.TemporaryDirectory() as tmpdir:
             baseline_path = Path(tmpdir) / "baseline.json"
             candidate_path = Path(tmpdir) / "candidate.json"
@@ -649,7 +649,7 @@ class TestCLICompare:
             assert "t1" in output or "t2" in output or "test" in output
 
     def test_compare_shows_diff_columns(self, runner, baseline_result, candidate_result):
-        """evalforge compare shows columns: test name, status, score, cost, latency changes."""
+        """verdictlab compare shows columns: test name, status, score, cost, latency changes."""
         with tempfile.TemporaryDirectory() as tmpdir:
             baseline_path = Path(tmpdir) / "baseline.json"
             candidate_path = Path(tmpdir) / "candidate.json"
@@ -677,7 +677,7 @@ class TestCLICompare:
             assert "not found" in output or "exist" in output or "error" in output
 
     def test_compare_invalid_json_handled(self, runner, baseline_result):
-        """evalforge compare with invalid JSON reports error."""
+        """verdictlab compare with invalid JSON reports error."""
         with tempfile.TemporaryDirectory() as tmpdir:
             baseline_path = Path(tmpdir) / "baseline.json"
             candidate_path = Path(tmpdir) / "candidate.json"
@@ -692,17 +692,17 @@ class TestCLICompare:
 
 
 # ===================================================================
-# CLI: evalforge gate
+# CLI: verdictlab gate
 # ===================================================================
 
 class TestCLIGate:
-    """Tests for evalforge gate command (US-4 integration)."""
+    """Tests for verdictlab gate command (US-4 integration)."""
 
     def test_gate_accepts_config_option(self, runner):
-        """evalforge gate accepts --config option."""
+        """verdictlab gate accepts --config option."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            config_path = Path(tmpdir) / "evalforge.yaml"
-            from evalforge.config import GateConfig, SuiteConfig, save_config
+            config_path = Path(tmpdir) / "verdictlab.yaml"
+            from verdictlab.config import GateConfig, SuiteConfig, save_config
             config = GateConfig(
                 baseline_dir=str(Path(tmpdir) / "baselines"),
                 suites=[SuiteConfig(path="/nonexistent/suite.yaml")],
@@ -716,8 +716,8 @@ class TestCLIGate:
             # Will fail because suite doesn't exist, but the CLI should parse correctly
             assert result.exit_code != 0
 
-    def test_gate_defaults_to_evalforge_yaml(self, runner):
-        """evalforge gate without --config looks for evalforge.yaml in cwd."""
+    def test_gate_defaults_to_verdictlab_yaml(self, runner):
+        """verdictlab gate without --config looks for verdictlab.yaml in cwd."""
         result = runner.invoke(_get_app(), ["gate"])
         # Should exit with error since no config in temp test dir
         assert result.exit_code != 0
@@ -730,7 +730,7 @@ class TestCLIGate:
 
 def _traj_run_result(suite_name, test_trajs):
     """Build a RunResult with trajectories from {test_id: Trajectory}."""
-    from evalforge.models import Trajectory
+    from verdictlab.models import Trajectory
     tests = [
         TestResult(id=tid, status="pass", trajectory=traj)
         for tid, traj in test_trajs.items()
@@ -755,8 +755,8 @@ def _write_json(tmpdir, name, result):
 
 class TestCLITrajectoryCompare:
     def test_compare_trajectory_flag_prints_block(self, runner, tmp_path):
-        """evalforge compare --trajectory prints the regression block."""
-        from evalforge.models import Trajectory, TrajectoryStep
+        """verdictlab compare --trajectory prints the regression block."""
+        from verdictlab.models import Trajectory, TrajectoryStep
         t = Trajectory(steps=[TrajectoryStep(index=0, tool="search")],
                        final_answer="x")
         base = _traj_run_result("base", {"t1": t})
@@ -780,7 +780,7 @@ class TestCLITrajectoryCompare:
 
     def test_fail_on_trajectory_regression_exits_1(self, runner, tmp_path):
         """--fail-on-trajectory-regression exits 1 when verdict is REGRESSED."""
-        from evalforge.models import Trajectory, TrajectoryStep
+        from verdictlab.models import Trajectory, TrajectoryStep
         t = Trajectory(steps=[TrajectoryStep(index=0, tool="search")],
                        final_answer="x")
         base = _traj_run_result("base", {"t1": t})
@@ -803,7 +803,7 @@ class TestCLITrajectoryCompare:
 
     def test_fail_on_trajectory_regression_passes_when_clean(self, runner, tmp_path):
         """Clean candidate (same trajectory) exits 0."""
-        from evalforge.models import Trajectory, TrajectoryStep
+        from verdictlab.models import Trajectory, TrajectoryStep
         t = Trajectory(steps=[TrajectoryStep(index=0, tool="search")],
                        final_answer="x")
         base = _traj_run_result("base", {"t1": t})
@@ -820,7 +820,7 @@ class TestCLITrajectoryCompare:
 
     def test_compare_without_flag_skips_trajectory(self, runner, tmp_path):
         """No --trajectory flag means no regression block, exit 0."""
-        from evalforge.models import Trajectory, TrajectoryStep
+        from verdictlab.models import Trajectory, TrajectoryStep
         t = Trajectory(steps=[TrajectoryStep(index=0, tool="search")],
                        final_answer="x")
         base = _traj_run_result("base", {"t1": t})
@@ -843,7 +843,7 @@ class TestCLITrajectoryCompare:
 
 class TestCLIImportTrajectory:
     def test_import_trajectory_writes_json_report(self, runner, tmp_path):
-        """evalforge import-trajectory produces a JSON report + metrics."""
+        """verdictlab import-trajectory produces a JSON report + metrics."""
         traj_path = tmp_path / "traj.json"
         traj_path.write_text(json.dumps({
             "steps": [
@@ -952,6 +952,6 @@ def _get_app():
     """Get the Typer app, importing lazily."""
     global _app
     if _app is None:
-        from evalforge.cli import app
+        from verdictlab.cli import app
         _app = app
     return _app

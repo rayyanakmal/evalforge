@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate demo trajectories for evalforge v2 (Phase 5).
+"""Generate demo trajectories for verdictlab v2 (Phase 5).
 
 Runs a tiny ReAct-style agent (search + calculator tools) on the
 hk-islands-facts suite via the DeepSeek API, twice:
@@ -10,10 +10,10 @@ hk-islands-facts suite via the DeepSeek API, twice:
 
 Both runs use the SAME suite, SAME tools, SAME model — the only difference
 is the system prompt (isolation of variables). Outputs per-test trajectory
-files that `evalforge import-trajectory` / `evalforge compare --trajectory`
+files that `verdictlab import-trajectory` / `verdictlab compare --trajectory`
 can grade.
 
-Requires DEEPSEEK_API_KEY (env or ~/.hermes/.env). Deps: httpx + evalforge.
+Requires DEEPSEEK_API_KEY (env or ~/.hermes/.env). Deps: httpx + verdictlab.
 
 Usage:
     python examples/gen_demo_trajectories.py [--model deepseek-chat]
@@ -31,8 +31,8 @@ from pathlib import Path
 
 import httpx
 
-from evalforge.models import TokenCount
-from evalforge.trajectory.capture import StepRecorder
+from verdictlab.models import TokenCount
+from verdictlab.trajectory.capture import StepRecorder
 
 # Documented deepseek-chat pricing (USD per 1M tokens) — demo cost is an
 # estimate from real token counts, marked as such in reports.

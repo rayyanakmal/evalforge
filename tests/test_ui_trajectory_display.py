@@ -2,8 +2,8 @@
 
 import pandas as pd
 
-from evalforge.models import Trajectory, TrajectoryStep
-from evalforge.ui.trajectory_display import (
+from verdictlab.models import Trajectory, TrajectoryStep
+from verdictlab.ui.trajectory_display import (
     per_tool_df,
     regression_df,
     steps_df,

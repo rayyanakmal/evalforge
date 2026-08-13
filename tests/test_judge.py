@@ -12,9 +12,9 @@ Tests for:
 import json
 import pytest
 
-from evalforge.models.llm import Message, LLMResponse
-from evalforge.models.suite import RubricDimension
-from evalforge.judge.client import (
+from verdictlab.models.llm import Message, LLMResponse
+from verdictlab.models.suite import RubricDimension
+from verdictlab.judge.client import (
     LLMClient,
     DeepSeekClient,
     create_client,
@@ -22,7 +22,7 @@ from evalforge.judge.client import (
     LLMAuthError,
     LLMError,
 )
-from evalforge.judge.prompts import (
+from verdictlab.judge.prompts import (
     JUDGE_SYSTEM_PROMPT,
     build_rubric_prompt,
     STRICT_RETRY_PROMPT,

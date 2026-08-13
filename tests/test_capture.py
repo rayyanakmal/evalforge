@@ -5,9 +5,9 @@ import time
 
 import pytest
 
-from evalforge.models import Trajectory, TrajectoryStep
-from evalforge.trajectory.capture import StepRecorder, record
-from evalforge.trajectory.importers import load_trajectory_json, load_trajectories_file
+from verdictlab.models import Trajectory, TrajectoryStep
+from verdictlab.trajectory.capture import StepRecorder, record
+from verdictlab.trajectory.importers import load_trajectory_json, load_trajectories_file
 
 
 class TestStepRecorder:
@@ -184,7 +184,7 @@ class TestImporters:
 class TestAdapters:
     def test_wrap_openai_shim_emits_llm_step(self):
         """The shim wraps a fake client; every completion call emits an llm step."""
-        from evalforge.trajectory.adapters import wrap_openai
+        from verdictlab.trajectory.adapters import wrap_openai
 
         class FakeResponse:
             def __init__(self, text):
@@ -211,12 +211,12 @@ class TestAdapters:
         assert steps[0].tokens.total == 15
 
     def test_wrap_openai_without_recorder_raises(self):
-        from evalforge.trajectory.adapters import wrap_openai
+        from verdictlab.trajectory.adapters import wrap_openai
         with pytest.raises(ValueError, match="recorder"):
             wrap_openai(object())
 
     def test_framework_callback_registration_requires_recorder(self):
-        from evalforge.trajectory.adapters import (
+        from verdictlab.trajectory.adapters import (
             register_langchain_callback, register_langgraph_callback,
         )
         with pytest.raises(ValueError, match="recorder"):

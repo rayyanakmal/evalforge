@@ -1,4 +1,4 @@
-# EvalForge — Architecture Design
+# VerdictLab — Architecture Design
 
 > **Version:** 0.1.0
 > **Design Date:** 2026-07-06
@@ -58,7 +58,7 @@
 └──────────────────────────────────────────────────────────────────┘
 ```
 
-### Data Flow — `evalforge run <suite>`
+### Data Flow — `verdictlab run <suite>`
 
 ```
                     ┌──────────────────┐
@@ -67,7 +67,7 @@
                     └────────┬─────────┘
                              │
                     ┌────────▼─────────┐
-                    │  Config.load()   │ ── reads evalforge.yaml (optional)
+                    │  Config.load()   │ ── reads verdictlab.yaml (optional)
                     │  (config.py)     │
                     └────────┬─────────┘
                              │
@@ -105,12 +105,12 @@
                     └────────┬─────────┘
                              │
                     ┌────────▼─────────────┐
-                    │  Reporter.generate() │ ── JSONReporter → evalforge-output/report-<ts>.json
+                    │  Reporter.generate() │ ── JSONReporter → verdictlab-output/report-<ts>.json
                     │  Reporter.write()    │    ConsoleReporter → stdout table
                     └──────────────────────┘
 ```
 
-### Data Flow — `evalforge gate`
+### Data Flow — `verdictlab gate`
 
 ```
   Config.load()
@@ -136,8 +136,8 @@
 Every file with a single responsibility.
 
 ```
-evalforge/
-├── evalforge/                    # Package root
+verdictlab/
+├── verdictlab/                    # Package root
 │   ├── __init__.py               # Version export: __version__ = "0.1.0"
 │   │
 │   ├── app.py                    # Typer CLI entry point (defines `app = typer.Typer()`)
@@ -160,8 +160,8 @@ evalforge/
 │   │   │
 │   │   └── init.py               # Scaffolding logic
 │   │       #   - scaffold_project(target_dir: Path, force: bool) → None
-│   │       #   - creates: evalforge.yaml, test-suites/example/suite.yaml, .gitignore
-│   │       #   Purpose: bootstraps a new EvalForge project
+│   │       #   - creates: verdictlab.yaml, test-suites/example/suite.yaml, .gitignore
+│   │       #   Purpose: bootstraps a new VerdictLab project
 │   │
 │   ├── ui/                       # Web dashboard (Streamlit)
 │   │   ├── __init__.py           # Empty
@@ -169,7 +169,7 @@ evalforge/
 │   │   #   #   - Loads 1-2 RunResult JSONs (sample v1/v2 or upload)
 │   │   #   #   - Renders summary cards, per-case tables, regression matrix
 │   │   #   #   - Reads existing RunResult/Summary/TrackingSummary models — no new data shapes
-│   │   #   #   Purpose: human-friendly exploration of evalforge results
+│   │   #   #   Purpose: human-friendly exploration of verdictlab results
 │   │   ├── metrics.py            # RAGAS-style metric presets
 │   │   #   #   - RAGAS_METRICS: dict of metric name → RubricDimension (1-dim rubric)
 │   │   #   #   - Faithfulness, Answer Relevancy, Context Precision/Recall, Answer Correctness
@@ -314,21 +314,21 @@ evalforge/
 │   │   ├── json_reporter.py      # JSON file reporter
 │   │   #   #   - class JSONReporter(Reporter)
 │   │   #   #   - generate() → JSON string (via pydantic .model_dump_json)
-│   │   #   #   - write() → writes to evalforge-output/report-{timestamp}.json
+│   │   #   #   - write() → writes to verdictlab-output/report-{timestamp}.json
 │   │   #   #   Purpose: primary persistence format; consumed by compare/gate
 │   │   │
 │   │   ├── console_reporter.py   # Terminal output reporter
 │   │   #   #   - class ConsoleReporter(Reporter)
 │   │   #   #   - generate() → formatted text table (pass/fail/error per test)
 │   │   #   #   - Summary block: pass_rate, total_cost, latency stats
-│   │   #   #   Purpose: human-readable stdout output for `evalforge run`
+│   │   #   #   Purpose: human-readable stdout output for `verdictlab run`
 │   │   │
 │   │   └── diff_reporter.py      # Comparison/diff reporter
 │   │       #   - class DiffReporter(Reporter)
 │   │       #   - generate_diff(baseline: RunResult, candidate: RunResult) → str
 │   │       #   - Table columns: test name, status, score Δ, cost Δ, latency Δ
 │   │       #   - Highlights regressions (↓) vs improvements (↑)
-│   │       #   Purpose: handles `evalforge compare` and gate regression output
+│   │       #   Purpose: handles `verdictlab compare` and gate regression output
 │   │
 │   └── gate/                     # CI gate logic
 │       ├── __init__.py           # Empty
@@ -354,7 +354,7 @@ evalforge/
 │   ├── test_cli.py               # CLI integration tests (AC-5.1, 5.2, 5.3)
 │   └── test_gate.py              # Gate checker tests (AC-4.1, 4.2, 4.3, 4.4)
 │
-├── evalforge.yaml                # Config file (created by `evalforge init`)
+├── verdictlab.yaml                # Config file (created by `verdictlab init`)
 ├── pyproject.toml                # Package config + entry point
 └── README.md                     # Project documentation
 ```
@@ -366,11 +366,11 @@ evalforge/
 ### 3.1 `Scorer` Interface
 
 ```python
-# evalforge/scoring/base.py
+# verdictlab/scoring/base.py
 
 from abc import ABC, abstractmethod
-from evalforge.models.result import ScoreResult, DimensionScore
-from evalforge.models.suite import Expected
+from verdictlab.models.result import ScoreResult, DimensionScore
+from verdictlab.models.suite import Expected
 
 
 class Scorer(ABC):
@@ -424,10 +424,10 @@ class ScoringError(Exception):
 ### 3.2 `LLMClient` Interface
 
 ```python
-# evalforge/judge/client.py
+# verdictlab/judge/client.py
 
 from abc import ABC, abstractmethod
-from evalforge.models.llm import LLMResponse, Message
+from verdictlab.models.llm import LLMResponse, Message
 
 
 class LLMClient(ABC):
@@ -504,11 +504,11 @@ def create_client(provider: str, model: str, api_key: str) -> LLMClient:
 ### 3.3 `Reporter` Interface
 
 ```python
-# evalforge/reporting/base.py
+# verdictlab/reporting/base.py
 
 from abc import ABC, abstractmethod
 from pathlib import Path
-from evalforge.models.result import RunResult
+from verdictlab.models.result import RunResult
 
 
 class Reporter(ABC):
@@ -558,10 +558,10 @@ class Reporter(ABC):
 ### 3.4 `Tracker` Interface
 
 ```python
-# evalforge/tracking/base.py
+# verdictlab/tracking/base.py
 
 from abc import ABC, abstractmethod
-from evalforge.models.result import TestResult, TrackingSummary
+from verdictlab.models.result import TestResult, TrackingSummary
 
 
 class Tracker(ABC):
@@ -676,10 +676,10 @@ Every new feature = new file, never editing existing implementation files.
 | **typer** | CLI framework | User requirement; native async support, type-hint-driven, produces clean help text automatically |
 | **pydantic v2** | Data modeling + validation | User requirement; validates YAML→model on load, serializes Result→JSON, strict mode for config |
 | **httpx** | Async HTTP client | User requirement; async-native, HTTP/2 support, connection pooling for concurrent LLM calls |
-| **pyyaml** | YAML parsing | User requirement; loads TestSuite .yaml files and evalforge.yaml config |
+| **pyyaml** | YAML parsing | User requirement; loads TestSuite .yaml files and verdictlab.yaml config |
 | **asyncio** | Concurrency | User requirement; `asyncio.Semaphore(10)` bounds parallelism, `asyncio.gather` for concurrent test execution |
 | **pytest** + **pytest-asyncio** | Testing | Standard Python testing; async test support for executor and client tests |
-| **streamlit** (optional) | Web dashboard | `evalforge[ui]` extra; renders RunResult JSONs (summary cards, per-case tables, regression matrix) with zero server code |
+| **streamlit** (optional) | Web dashboard | `verdictlab[ui]` extra; renders RunResult JSONs (summary cards, per-case tables, regression matrix) with zero server code |
 | **rich** (optional) | Terminal formatting | Not specified but recommended for ConsoleReporter tables; can fall back to plain text |
 
 **What we're NOT using (and why):**
@@ -724,7 +724,7 @@ Every new feature = new file, never editing existing implementation files.
 
 | Decision | Rationale |
 |----------|-----------|
-| `asyncio.Semaphore(10)` | SPEC AC-1.3: 100+ tests in <5 min. 10 parallel calls is the sweet spot — enough throughput, not too much API contention. Configurable via `evalforge.yaml` `concurrency` field. |
+| `asyncio.Semaphore(10)` | SPEC AC-1.3: 100+ tests in <5 min. 10 parallel calls is the sweet spot — enough throughput, not too much API contention. Configurable via `verdictlab.yaml` `concurrency` field. |
 | One coroutine per test | Each test is independent; `asyncio.gather` runs them concurrently up to the semaphore limit. Order is non-deterministic (acceptable — each test is self-contained). |
 | Scorer call inside the semaphore | RubricScorer calls the judge LLM, which is also rate-limited. Sharing the semaphore prevents scoring from saturating the API. |
 | Retry outside the semaphore? | No — retry is inside the coroutine. If a call fails with timeout, it retries once, then releases the semaphore. The retry itself re-acquires the semaphore implicitly (it's still inside `async with semaphore`). |
@@ -794,18 +794,18 @@ Every acceptance criterion has a definitive home.
 | **AC-4.2** (3% regression within 5% → pass) | `gate/checker.py` | Compare regression % to `allowed_regression_pct` per suite |
 | **AC-4.3** (8% regression >5% → fail with report) | `gate/checker.py`, `reporting/diff_reporter.py` | Gate fails → `DiffReporter` prints regressed tests |
 | **AC-4.4** (no baseline → create baseline, pass) | `gate/checker.py` | `GateChecker` detects missing baseline → runs suite → saves as baseline → returns pass |
-| **Edge: Config missing** | `config.py` | `load_config()` raises `FileNotFoundError` with message: "No config found. Run `evalforge init`." |
+| **Edge: Config missing** | `config.py` | `load_config()` raises `FileNotFoundError` with message: "No config found. Run `verdictlab init`." |
 | **Edge: All metrics improved** | `gate/checker.py` | Regression is negative or zero → gate passes, saves new baseline |
 
 ### US-5: CLI & Report Output
 
 | AC | Component | Method/Path |
 |----|-----------|-------------|
-| **AC-5.1** (`evalforge run <suite>` → stdout + JSON report) | `cli/main.py`, `reporting/` | `run()` calls `Executor.run()` → `ConsoleReporter.write(stdout)` + `JSONReporter.write(evalforge-output/report-{ts}.json)` |
-| **AC-5.2** (`evalforge compare` → diff table) | `cli/main.py`, `reporting/diff_reporter.py` | `compare()` loads two JSON reports → `DiffReporter.generate_diff()` |
-| **AC-5.3** (`evalforge init` → scaffolds project) | `cli/init.py` | `scaffold_project()` creates config, suite folder, .gitignore |
+| **AC-5.1** (`verdictlab run <suite>` → stdout + JSON report) | `cli/main.py`, `reporting/` | `run()` calls `Executor.run()` → `ConsoleReporter.write(stdout)` + `JSONReporter.write(verdictlab-output/report-{ts}.json)` |
+| **AC-5.2** (`verdictlab compare` → diff table) | `cli/main.py`, `reporting/diff_reporter.py` | `compare()` loads two JSON reports → `DiffReporter.generate_diff()` |
+| **AC-5.3** (`verdictlab init` → scaffolds project) | `cli/init.py` | `scaffold_project()` creates config, suite folder, .gitignore |
 | **Edge: Compare non-existent baseline** | `cli/main.py` | `compare()` checks file existence before loading; raises clear error with paths searched |
-| **Edge: Init in existing directory** | `cli/init.py` | `scaffold_project()` checks for existing `evalforge.yaml`; if found, prompts for confirmation (unless `--force`) |
+| **Edge: Init in existing directory** | `cli/init.py` | `scaffold_project()` checks for existing `verdictlab.yaml`; if found, prompts for confirmation (unless `--force`) |
 
 ---
 
@@ -833,6 +833,6 @@ The `judge-json-validity` spike yielded concrete, binding constraints for the re
 | One `LLMClient` for both target and judge | Both target LLM and judge LLM use the same API shapes; differentiate by passing different `LLMClient` instances with different models | Separate `TargetClient` and `JudgeClient` → rejected as over-abstraction; same interface works for both |
 | `FunctionScorer` takes a callable, not a file path | Maximum flexibility; users can pass lambdas, imported functions, or partials | Loading from import path → rejected as fragile; callable is simpler |
 | Tracker is pull-model (executor pushes TestResults) | Executor owns the loop; trackers are passive accumulators | Push-model where tracker polls → rejected; adds unnecessary complexity |
-| Gate saves baseline automatically, no separate command | Matches SPEC AC-4.4: "creates the baseline automatically." Reduces CLI surface area. | `evalforge baseline save` command → rejected; SPEC says auto-create |
+| Gate saves baseline automatically, no separate command | Matches SPEC AC-4.4: "creates the baseline automatically." Reduces CLI surface area. | `verdictlab baseline save` command → rejected; SPEC says auto-create |
 | Config is YAML-only for v0.1 | SPEC data contracts are in YAML; pyyaml is a requirement | TOML support → deferred to future extension point |
 | `rich` is optional dependency | ConsoleReporter can fall back to plain `print()` tables; rich adds color but isn't critical | Hard dependency → rejected to keep install footprint minimal |

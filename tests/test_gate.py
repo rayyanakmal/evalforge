@@ -17,12 +17,12 @@ from pathlib import Path
 
 import pytest
 
-from evalforge.config import GateConfig, SuiteConfig
-from evalforge.models.suite import TestSuite, TestCase, Expected
-from evalforge.models.result import (
+from verdictlab.config import GateConfig, SuiteConfig
+from verdictlab.models.suite import TestSuite, TestCase, Expected
+from verdictlab.models.result import (
     RunResult, TestResult, ScoreResult, Summary, TokenCount,
 )
-from evalforge.gate.checker import GateChecker, GateResult
+from verdictlab.gate.checker import GateChecker, GateResult
 
 
 # ---------------------------------------------------------------------------
@@ -147,7 +147,7 @@ class TestGateResult:
 
 @pytest.mark.asyncio
 async def test_ac4_4_no_baseline_creates_and_passes(sample_suite):
-    """AC-4.4: Given no prior baseline, when evalforge gate runs,
+    """AC-4.4: Given no prior baseline, when verdictlab gate runs,
     then it creates the baseline automatically and exits 0 (pass)."""
     with tempfile.TemporaryDirectory() as tmpdir:
         baseline_dir = Path(tmpdir) / "baselines"
@@ -406,13 +406,13 @@ async def test_edge_all_improved_passes_and_saves_baseline(sample_suite):
 # ---------------------------------------------------------------------------
 
 def test_edge_config_missing_clear_error():
-    """Config file missing → FileNotFoundError with message about evalforge init."""
-    missing = Path("/nonexistent/path/evalforge.yaml")
+    """Config file missing → FileNotFoundError with message about verdictlab init."""
+    missing = Path("/nonexistent/path/verdictlab.yaml")
     with pytest.raises(FileNotFoundError) as exc_info:
-        from evalforge.config import load_config
+        from verdictlab.config import load_config
         load_config(missing)
     msg = str(exc_info.value)
-    assert "No config found" in msg or "evalforge init" in msg
+    assert "No config found" in msg or "verdictlab init" in msg
 
 
 # ---------------------------------------------------------------------------

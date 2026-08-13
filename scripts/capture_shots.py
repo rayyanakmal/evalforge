@@ -1,4 +1,4 @@
-"""Capture the README screenshot of the deployed EvalForge dashboard.
+"""Capture the README screenshot of the deployed VerdictLab dashboard.
 
 - dashboard.png: full-page shot of the default sample pair
   (Sample: same score, more tools) at 1440x3000 viewport — hero, summary
@@ -12,8 +12,8 @@ import time
 
 from playwright.sync_api import sync_playwright
 
-URL = "https://evalforge-wmdbf6rtfxjzh668zugy9d.streamlit.app/"
-OUT = "/home/rayyan/projects/evalforge/assets"
+URL = "https://verdictlab-wmdbf6rtfxjzh668zugy9d.streamlit.app/"
+OUT = "/home/rayyan/projects/verdictlab/assets"
 
 
 def main() -> None:

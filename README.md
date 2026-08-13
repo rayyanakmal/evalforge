@@ -1,11 +1,16 @@
+> ⚠️ **Name change (2026-08-13):** this project was formerly **EvalForge**. Same project,
+> same demo, same code — renamed to **VerdictLab** because "EvalForge" collides with an
+> unrelated viral project of the same name. The old GitHub URL (`github.com/rayyanakmal/evalforge`)
+> still works and redirects here.
+
 <p align="center">
   <img src="https://img.shields.io/badge/python-3.11%2B-blue" alt="Python 3.11+">
-  <img src="https://img.shields.io/badge/tests-246%20passing-brightgreen" alt="246 tests passing">
+  <img src="https://img.shields.io/badge/tests-247%20passing-brightgreen" alt="247 tests passing">
   <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License">
   <img src="https://img.shields.io/badge/version-v0.2.0-blue" alt="v0.2.0">
 </p>
 
-<h1 align="center">⚒️ EvalForge</h1>
+<h1 align="center">⚒️ VerdictLab</h1>
 <p align="center"><em>The report card for your AI agents — grades the answer <strong>and</strong> the journey.</em></p>
 
 <p align="center">
@@ -22,9 +27,9 @@
 
 ## What it does
 
-**EvalForge checks whether AI agents actually work — before you trust them.**
+**VerdictLab checks whether AI agents actually work — before you trust them.**
 
-AI is great at sounding confident. The problem is it's often *wrong* while sounding confident. EvalForge solves this the same way software engineers have always solved it: **write down what "correct" looks like, run the AI against it, and see exactly where it fails.**
+AI is great at sounding confident. The problem is it's often *wrong* while sounding confident. VerdictLab solves this the same way software engineers have always solved it: **write down what "correct" looks like, run the AI against it, and see exactly where it fails.**
 
 Think of it as **unit tests for AI**. You define a list of questions your customers might ask, run your agent against them, and get a clear report card:
 
@@ -33,7 +38,7 @@ Think of it as **unit tests for AI**. You define a list of questions your custom
 - How fast is it? How much does it cost per answer?
 - If you change your agent (new model, new prompt), did anything that used to work *break*?
 
-**v0.2.0 adds the journey:** beyond the final answer, EvalForge grades *how* the agent got there — steps taken, tool calls, loops, errors, and per-tool cost. Two versions can have the **same pass rate** and still differ massively in process. EvalForge catches that.
+**v0.2.0 adds the journey:** beyond the final answer, VerdictLab grades *how* the agent got there — steps taken, tool calls, loops, errors, and per-tool cost. Two versions can have the **same pass rate** and still differ massively in process. VerdictLab catches that.
 
 ---
 
@@ -43,7 +48,7 @@ Think of it as **unit tests for AI**. You define a list of questions your custom
 
 <div align="center">
   <a href="https://evalforge-wmdbf6rtfxjzh668zugy9d.streamlit.app/">
-    <img src="assets/dashboard.png" alt="EvalForge dashboard — real geo sample pair (geo_baseline vs geo_more_tools): same 100% pass rate, lookup tool calls doubled, caught by trajectory regression" width="700">
+    <img src="assets/dashboard.png" alt="VerdictLab dashboard — real geo sample pair (geo_baseline vs geo_more_tools): same 100% pass rate, lookup tool calls doubled, caught by trajectory regression" width="700">
   </a>
   <p><em>Live app: summary cards, per-case comparison table, regressions flagged in red, and the trajectory report card (process metrics, per-tool rollup, REGRESSED verdict).</em></p>
 </div>
@@ -55,7 +60,7 @@ Think of it as **unit tests for AI**. You define a list of questions your custom
 ```
   1. WRITE         2. RUN             3. REVIEW
   ─────────────    ──────────────     ──────────────
-  You write the    EvalForge calls    Open the dashboard:
+  You write the    VerdictLab calls    Open the dashboard:
   questions your   your agent with    pass rate, cost, speed,
   customers ask +  each one, checks   and exactly which
   what a good      the answer, and    questions it got wrong.
@@ -64,7 +69,7 @@ Think of it as **unit tests for AI**. You define a list of questions your custom
 ```
 
 - **You define what "right" means** — no AI needed for that, just knowledge of your business
-- **EvalForge does the checking** — deterministically and consistently, every time
+- **VerdictLab does the checking** — deterministically and consistently, every time
 - **The dashboard is the scoreboard** — see everything in one view, or compare two versions side-by-side
 
 ---
@@ -73,40 +78,40 @@ Think of it as **unit tests for AI**. You define a list of questions your custom
 
 ```bash
 # Install (core CLI)
-pip install evalforge
+pip install verdictlab
 
 # Install with dashboard UI
-pip install "evalforge[ui]"
+pip install "verdictlab[ui]"
 
 # Scaffold a new evaluation project
-evalforge init
+verdictlab init
 
-# Run the example suite — real execution against evalforge.yaml's target provider,
+# Run the example suite — real execution against verdictlab.yaml's target provider,
 # capturing each test's trajectory (journey) into the same report
-evalforge run test-suites/example/suite.yaml
+verdictlab run test-suites/example/suite.yaml
 
 # Run the same suite against a different model/provider (compare agents or versions)
-evalforge run suite.yaml --provider deepseek --model deepseek-chat
+verdictlab run suite.yaml --provider deepseek --model deepseek-chat
 
 # Compare two runs (regression detection) — answer-level diff
-evalforge compare baselines/run-1.json evalforge-output/report-<ts>.json
+verdictlab compare baselines/run-1.json verdictlab-output/report-<ts>.json
 
 # Compare two runs INCLUDING process quality (trajectory regression)
 # Same files, both dimensions: pass rate, cost, latency AND steps/loops/per-tool
-evalforge compare run_a.json run_b.json --trajectory
+verdictlab compare run_a.json run_b.json --trajectory
 
 # Import a trajectory export from a sealed-box agent and get a process report card
-evalforge import-trajectory trajectory.json --out report.json
+verdictlab import-trajectory trajectory.json --out report.json
 
 # CI gate — exits 0 (pass) or 1 (fail); --fail-on-trajectory-regression also fails on process regressions
-evalforge gate
-evalforge compare run_a.json run_b.json --trajectory --fail-on-trajectory-regression
+verdictlab gate
+verdictlab compare run_a.json run_b.json --trajectory --fail-on-trajectory-regression
 
 # Launch the web dashboard
-streamlit run evalforge/ui/streamlit_app.py
+streamlit run verdictlab/ui/streamlit_app.py
 ```
 
-**One run, both dimensions:** `evalforge run` executes your suite against the configured
+**One run, both dimensions:** `verdictlab run` executes your suite against the configured
 provider and records the journey of every test (steps, tokens, cost, latency). The saved
 report JSON carries both the answer-level results AND the trajectory report card — so
 `compare --trajectory` and the dashboard's trajectory view work on the same file, no
@@ -164,7 +169,7 @@ Explore evaluation results without touching the CLI. Load one run for metrics, o
 - **Trajectory regression** — compare two runs on process quality with a REGRESSED / ok verdict: same pass rate, worse journey → caught (see the built-in sample)
 - **Latency percentiles** — p50/p95/p99 + token usage under the hood
 - **RAGAS-style metric presets** — industry-standard rubric vocabulary (faithfulness, answer relevancy, context precision, context recall, answer correctness) built in as LLM-judge rubric templates — no extra dependency
-- **Upload support** — drop in your own `RunResult` JSON files (exactly what `evalforge run` writes), or use the three built-in sample pairs — same score / pass rate regressed / both regressed — each generated from real runs through the same Executor path as the CLI
+- **Upload support** — drop in your own `RunResult` JSON files (exactly what `verdictlab run` writes), or use the three built-in sample pairs — same score / pass rate regressed / both regressed — each generated from real runs through the same Executor path as the CLI
 
 ---
 
@@ -203,13 +208,13 @@ tests:
 
 | Command | Description |
 |---------|-------------|
-| `evalforge init` | Scaffold a new project with example suite |
-| `evalforge run <suite>` | Run a test suite against an LLM |
-| `evalforge compare <baseline> <candidate>` | Diff two runs (score, cost, latency) |
-| `evalforge compare --trajectory` | Diff two runs including process quality |
-| `evalforge import-trajectory <file>` | Import a trajectory export → process report card |
-| `evalforge gate` | CI gate — checks regression against baseline |
-| `evalforge --help` | Show all commands |
+| `verdictlab init` | Scaffold a new project with example suite |
+| `verdictlab run <suite>` | Run a test suite against an LLM |
+| `verdictlab compare <baseline> <candidate>` | Diff two runs (score, cost, latency) |
+| `verdictlab compare --trajectory` | Diff two runs including process quality |
+| `verdictlab import-trajectory <file>` | Import a trajectory export → process report card |
+| `verdictlab gate` | CI gate — checks regression against baseline |
+| `verdictlab --help` | Show all commands |
 
 ---
 
@@ -270,8 +275,8 @@ Infrastructure Layer
 ## Configuration
 
 ```yaml
-# evalforge.yaml
-baseline_dir: evalforge-baselines/
+# verdictlab.yaml
+baseline_dir: verdictlab-baselines/
 suites:
   - path: test-suites/example/suite.yaml
     allowed_regression_pct: 5
@@ -319,10 +324,10 @@ concurrency: 10
 
 | Version | What it is | Release notes |
 |---------|-----------|---------------|
-| **v0.2.0** | Trajectory-level agent evaluation — grades the journey (process metrics, trajectory regression), not just the final answer | [GitHub Release](https://github.com/rayyanakmal/evalforge/releases/tag/v0.2.0) |
-| **v0.1.0** | Original report card — pass rates, LLM-as-Judge rubrics, cost/latency, CI gate, dashboard | [GitHub Release](https://github.com/rayyanakmal/evalforge/releases/tag/v0.1.0) |
+| **v0.2.0** | Trajectory-level agent evaluation — grades the journey (process metrics, trajectory regression), not just the final answer | [GitHub Release](https://github.com/rayyanakmal/verdictlab/releases/tag/v0.2.0) |
+| **v0.1.0** | Original report card — pass rates, LLM-as-Judge rubrics, cost/latency, CI gate, dashboard | [GitHub Release](https://github.com/rayyanakmal/verdictlab/releases/tag/v0.1.0) |
 
-**Live demo (v0.2.0):** https://evalforge-wmdbf6rtfxjzh668zugy9d.streamlit.app/ — pick any of the three built-in sample pairs from the sidebar (same score / pass rate / both regressed) to see the report card in action. All samples are real `evalforge run` outputs (answers + trajectories, one file per run) generated by `examples/gen_realistic_samples.py`.
+**Live demo (v0.2.0):** https://evalforge-wmdbf6rtfxjzh668zugy9d.streamlit.app/ — pick any of the three built-in sample pairs from the sidebar (same score / pass rate / both regressed) to see the report card in action. All samples are real `verdictlab run` outputs (answers + trajectories, one file per run) generated by `examples/gen_realistic_samples.py`.
 
 ---
 

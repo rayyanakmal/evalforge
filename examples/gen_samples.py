@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate evalforge sample results: v1 (23/24 pass) vs v2 (20/24 pass).
+"""Generate verdictlab sample results: v1 (23/24 pass) vs v2 (20/24 pass).
 
 Story: model v2 regressed on 3 tool-selection cases that v1 passed.
 Only t05, t13, t20 flip from pass to fail (the regression trio).
@@ -8,7 +8,7 @@ All other cases stay identical so the diff is easy to read.
 import json
 from pathlib import Path
 
-OUT = Path("/home/rayyan/projects/evalforge/examples")
+OUT = Path("/home/rayyan/projects/verdictlab/examples")
 
 BASE = [
     # (id, response, expected, dim, reasoning, latency, tokens, cost)

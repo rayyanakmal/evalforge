@@ -1,7 +1,7 @@
-"""Generate realistic post-`evalforge run` sample files for the dashboard.
+"""Generate realistic post-`verdictlab run` sample files for the dashboard.
 
 Runs a tool-using geography agent against a real LLM provider (DeepSeek)
-through the EXACT same Executor path as `evalforge run`, capturing answers
+through the EXACT same Executor path as `verdictlab run`, capturing answers
 AND per-test trajectories in one RunResult per run — the same files a user
 gets from the CLI and uploads to the dashboard.
 
@@ -33,10 +33,10 @@ import re
 import sys
 from pathlib import Path
 
-from evalforge.cli.run_real import resolve_api_key, run_suite
-from evalforge.judge.client import LLMClient, create_client
-from evalforge.models.llm import LLMResponse, Message, Usage
-from evalforge.models.suite import Expected, TestCase, TestMetadata, TestSuite
+from verdictlab.cli.run_real import resolve_api_key, run_suite
+from verdictlab.judge.client import LLMClient, create_client
+from verdictlab.models.llm import LLMResponse, Message, Usage
+from verdictlab.models.suite import Expected, TestCase, TestMetadata, TestSuite
 
 OUT_DIR = Path(__file__).parent
 
@@ -258,7 +258,7 @@ class ToolAgent:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Generate realistic evalforge sample runs")
+    parser = argparse.ArgumentParser(description="Generate realistic verdictlab sample runs")
     parser.add_argument("--model", default="deepseek-chat")
     parser.add_argument("--concurrency", type=int, default=4)
     parser.add_argument("--only", nargs="*", default=None,

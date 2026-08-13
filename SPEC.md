@@ -1,8 +1,8 @@
-# EvalForge — Eval-Driven Agent Framework
+# VerdictLab — Eval-Driven Agent Framework
 
 ## Overview
 
-EvalForge is an open-source framework for systematically evaluating LLM-powered systems — RAG pipelines, multi-agent orchestrations, and tool-calling agents. It treats evaluation as a first-class CI pipeline stage: define test suites, run your system against them, score across multiple dimensions (correctness, cost, latency, safety), and gate deployments on regressions.
+VerdictLab is an open-source framework for systematically evaluating LLM-powered systems — RAG pipelines, multi-agent orchestrations, and tool-calling agents. It treats evaluation as a first-class CI pipeline stage: define test suites, run your system against them, score across multiple dimensions (correctness, cost, latency, safety), and gate deployments on regressions.
 
 The name combines **Evaluation** + **Forge** (the place where raw materials are shaped into finished tools under controlled, measurable conditions).
 
@@ -15,7 +15,7 @@ The name combines **Evaluation** + **Forge** (the place where raw materials are 
 | Python 3.11+ | Available on Mac |
 | DeepSeek API key | `DEEPSEEK_API_KEY` in `~/.zshrc` (already set) |
 | `uv` for package management | `pip install uv` |
-| Git repo | Created at `~/projects/evalforge/` |
+| Git repo | Created at `~/projects/verdictlab/` |
 
 ---
 
@@ -67,27 +67,27 @@ Edge cases:
 
 ## US-4: CI Gate Integration
 
-**AC-4.1:** Given a `evalforge.toml` or `evalforge.yaml` config file, when `evalforge gate` is run, then it loads the config, identifies the regression baseline, runs the suite, and exits with code 0 (pass) or 1 (fail).
+**AC-4.1:** Given a `verdictlab.toml` or `verdictlab.yaml` config file, when `verdictlab gate` is run, then it loads the config, identifies the regression baseline, runs the suite, and exits with code 0 (pass) or 1 (fail).
 
 **AC-4.2:** Given a config with `allowed_regression: 5%`, when a run shows 3% regression, then the gate passes (within threshold).
 
 **AC-4.3:** Given a config with `allowed_regression: 5%`, when a run shows 8% regression, then the gate fails with a report of what regressed.
 
-**AC-4.4:** Given no prior baseline, when `evalforge gate` runs, then it creates the baseline automatically and exits 0 (pass — nothing to regress against).
+**AC-4.4:** Given no prior baseline, when `verdictlab gate` runs, then it creates the baseline automatically and exits 0 (pass — nothing to regress against).
 
 Edge cases:
-- Config file missing → exit 1 with clear error: "No config found. Run `evalforge init` to create one."
+- Config file missing → exit 1 with clear error: "No config found. Run `verdictlab init` to create one."
 - All metrics improved → gate passes, saves new baseline
 
 ---
 
 ## US-5: CLI & Report Output
 
-**AC-5.1:** Given `evalforge run <suite>`, when executed, then it runs the suite and outputs results to stdout and saves a JSON report to `evalforge-output/report-<timestamp>.json`.
+**AC-5.1:** Given `verdictlab run <suite>`, when executed, then it runs the suite and outputs results to stdout and saves a JSON report to `verdictlab-output/report-<timestamp>.json`.
 
-**AC-5.2:** Given `evalforge compare <baseline> <candidate>`, when executed, then it shows a diff table with columns: test name, status, score change, cost change, latency change.
+**AC-5.2:** Given `verdictlab compare <baseline> <candidate>`, when executed, then it shows a diff table with columns: test name, status, score change, cost change, latency change.
 
-**AC-5.3:** Given `evalforge init`, when executed in an empty directory, then it creates `evalforge.yaml`, a `test-suites/` folder with an example suite, and a `.gitignore` for output directory.
+**AC-5.3:** Given `verdictlab init`, when executed in an empty directory, then it creates `verdictlab.yaml`, a `test-suites/` folder with an example suite, and a `.gitignore` for output directory.
 
 Edge cases:
 - `compare` with non-existent baseline file → error with paths searched
@@ -97,13 +97,13 @@ Edge cases:
 
 ## US-T1: Trajectory Capture (the journey, not just the answer)
 
-**AC-T1.1:** Given an agent run under evaluation, when the agent makes tool calls, then evalforge records each call as an ordered step with tool name, args, result, latency, and optional tokens/cost/thought/error.
+**AC-T1.1:** Given an agent run under evaluation, when the agent makes tool calls, then verdictlab records each call as an ordered step with tool name, args, result, latency, and optional tokens/cost/thought/error.
 
 **AC-T1.2:** Given an agent built on a framework (LangGraph/CrewAI), when the user registers a callback, then the trajectory is captured with zero changes to the agent's code.
 
 **AC-T1.3:** Given a custom agent loop, when the user adds one `emit(...)` line per tool call site, then the trajectory is captured in order.
 
-**AC-T1.4:** Given a sealed-box agent with no hooks, when the user imports a trajectory JSON file, then evalforge produces the same report card as a captured run.
+**AC-T1.4:** Given a sealed-box agent with no hooks, when the user imports a trajectory JSON file, then verdictlab produces the same report card as a captured run.
 
 **AC-T1.5:** Given a captured run, when the report is produced, then each TestResult carries its trajectory and the process metrics layer summarizes it.
 
@@ -137,7 +137,7 @@ Edge cases:
 
 **AC-T3.3:** Given a candidate that loops 3x more than the baseline with the same pass rate, when compared, then the process metrics show the regression even though outcomes match.
 
-**AC-T3.4:** Given `evalforge compare --trajectory --fail-on-trajectory-regression`, when any tool regressed, then the CLI exits 1 (CI gate).
+**AC-T3.4:** Given `verdictlab compare --trajectory --fail-on-trajectory-regression`, when any tool regressed, then the CLI exits 1 (CI gate).
 
 ---
 
@@ -243,7 +243,7 @@ summary:
 
 ### GateConfig
 ```yaml
-baseline_dir: string (default: evalforge-baselines/)
+baseline_dir: string (default: verdictlab-baselines/)
 suites:
   - path: string
     allowed_regression_pct: float (default: 5)
@@ -261,8 +261,8 @@ concurrency: integer (default: 10)
 ## Architecture (Outlined for Architect)
 
 ```
-evalforge/
-├── evalforge/              # Package root
+verdictlab/
+├── verdictlab/              # Package root
 │   ├── __init__.py
 │   ├── cli/               # CLI commands (typer)
 │   │   ├── __init__.py
@@ -298,13 +298,13 @@ evalforge/
 │   ├── cli.py             # Typer CLI entry point
 │   └── config.py          # Config loader (YAML/TOML)
 ├── test-suites/           # Example test suites
-│   └── example/           # Scaffolded by `evalforge init`
+│   └── example/           # Scaffolded by `verdictlab init`
 ├── tests/                 # Project's own test suite
 │   ├── test_runner.py
 │   ├── test_scoring.py
 │   ├── test_judge.py
 │   └── test_cli.py
-├── evalforge.yaml         # Config file (created by init)
+├── verdictlab.yaml         # Config file (created by init)
 └── pyproject.toml         # Package config + entry point
 ```
 
@@ -312,7 +312,7 @@ evalforge/
 
 ## Out of Scope (v0.1)
 
-- ~~GUI / dashboard~~ — **Done:** Streamlit web dashboard added in `evalforge/ui/` (see README "Web Dashboard")
+- ~~GUI / dashboard~~ — **Done:** Streamlit web dashboard added in `verdictlab/ui/` (see README "Web Dashboard")
 - Real-time streaming evaluation (batch-only)
 - Plugin system for custom scorers (hardcoded strategies, extensible via base class)
 - CI provider integrations (exits with code, user pipes to GitHub Actions)

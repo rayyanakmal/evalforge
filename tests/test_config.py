@@ -17,7 +17,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from evalforge.config import (
+from verdictlab.config import (
     GateConfig, SuiteConfig, ProviderConfig,
     load_config, save_config,
 )
@@ -70,7 +70,7 @@ class TestGateConfigModel:
     def test_defaults(self):
         """GateConfig has correct defaults."""
         gc = GateConfig()
-        assert gc.baseline_dir == "evalforge-baselines/"
+        assert gc.baseline_dir == "verdictlab-baselines/"
         assert gc.suites == []
         assert gc.concurrency == 10
         assert gc.judge is None
@@ -122,7 +122,7 @@ class TestGateConfigModel:
             suites=[SuiteConfig(path="s.yaml")],
         )
         d = gc.model_dump()
-        assert d["baseline_dir"] == "evalforge-baselines/"
+        assert d["baseline_dir"] == "verdictlab-baselines/"
         assert d["suites"][0]["path"] == "s.yaml"
 
 
@@ -134,7 +134,7 @@ class TestLoadConfig:
     """Tests for load_config function."""
 
     def test_load_valid_yaml(self):
-        """load_config loads a valid evalforge.yaml file."""
+        """load_config loads a valid verdictlab.yaml file."""
         yaml_content = """
 baseline_dir: my-baselines/
 suites:
@@ -201,7 +201,7 @@ suites:
 
         try:
             config = load_config(tmp_path)
-            assert config.baseline_dir == "evalforge-baselines/"  # default
+            assert config.baseline_dir == "verdictlab-baselines/"  # default
             assert len(config.suites) == 1
             assert config.concurrency == 10  # default
             assert config.judge is None
@@ -211,12 +211,12 @@ suites:
 
     def test_load_missing_file_raises_clear_error(self):
         """load_config with non-existent file raises FileNotFoundError
-        with a clear message including 'evalforge init'."""
-        missing = Path("/nonexistent/evalforge.yaml")
+        with a clear message including 'verdictlab init'."""
+        missing = Path("/nonexistent/verdictlab.yaml")
         with pytest.raises(FileNotFoundError) as exc_info:
             load_config(missing)
         msg = str(exc_info.value)
-        assert "No config found" in msg or "evalforge init" in msg
+        assert "No config found" in msg or "verdictlab init" in msg
 
     def test_load_invalid_yaml_raises_error(self):
         """load_config with invalid YAML raises an error."""
@@ -290,7 +290,7 @@ class TestSaveConfig:
         config = GateConfig(suites=[SuiteConfig(path="s.yaml")])
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            nested = Path(tmpdir) / "sub" / "deep" / "evalforge.yaml"
+            nested = Path(tmpdir) / "sub" / "deep" / "verdictlab.yaml"
             save_config(config, nested)
             assert nested.exists()
             content = nested.read_text()

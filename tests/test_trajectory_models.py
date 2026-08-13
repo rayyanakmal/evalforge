@@ -9,7 +9,7 @@ import json
 import pytest
 from pydantic import ValidationError
 
-from evalforge.models import (
+from verdictlab.models import (
     RunResult, TestResult, TokenCount, Trajectory, TrajectoryStep,
 )
 

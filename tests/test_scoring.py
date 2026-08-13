@@ -14,12 +14,12 @@ import json
 import warnings
 import pytest
 
-from evalforge.models.suite import Expected, RubricDimension
-from evalforge.models.result import ScoreResult, DimensionScore
-from evalforge.models.llm import LLMResponse, Usage
-from evalforge.scoring.base import ScoringError
-from evalforge.scoring.rubric import RubricScorer
-from evalforge.judge.client import LLMClient, LLMError
+from verdictlab.models.suite import Expected, RubricDimension
+from verdictlab.models.result import ScoreResult, DimensionScore
+from verdictlab.models.llm import LLMResponse, Usage
+from verdictlab.scoring.base import ScoringError
+from verdictlab.scoring.rubric import RubricScorer
+from verdictlab.judge.client import LLMClient, LLMError
 
 
 # ---------------------------------------------------------------------------
