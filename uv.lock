@@ -183,38 +183,6 @@ wheels = [
 ]
 
 [[package]]
-name = "evalforge"
-version = "0.2.0"
-source = { editable = "." }
-dependencies = [
-    { name = "httpx" },
-    { name = "pydantic" },
-    { name = "pytest" },
-    { name = "pytest-asyncio" },
-    { name = "pyyaml" },
-    { name = "typer" },
-]
-
-[package.optional-dependencies]
-ui = [
-    { name = "pandas" },
-    { name = "streamlit" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "httpx", specifier = ">=0.27" },
-    { name = "pandas", marker = "extra == 'ui'", specifier = ">=2.0" },
-    { name = "pydantic", specifier = ">=2.0" },
-    { name = "pytest", specifier = ">=9.1.1" },
-    { name = "pytest-asyncio", specifier = ">=1.4.0" },
-    { name = "pyyaml", specifier = ">=6.0" },
-    { name = "streamlit", marker = "extra == 'ui'", specifier = ">=1.36" },
-    { name = "typer", specifier = ">=0.12" },
-]
-provides-extras = ["ui"]
-
-[[package]]
 name = "h11"
 version = "0.16.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1411,6 +1379,38 @@ sdist = { url = "https://files.pythonhosted.org/packages/03/18/ccce41535dee1be77
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c7/d5/68e6e9bca63c0badf67002890a46d3784c958de45b65e1275ec583ca1f06/uvicorn-0.52.1-py3-none-any.whl", hash = "sha256:e4403f9d93188cf9d1088e9f40e3acd12630e2df8675316704379a7fc20fff6a", size = 79859, upload-time = "2026-08-01T18:19:29.294Z" },
 ]
+
+[[package]]
+name = "verdictlab"
+version = "0.2.0"
+source = { editable = "." }
+dependencies = [
+    { name = "httpx" },
+    { name = "pydantic" },
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "pyyaml" },
+    { name = "typer" },
+]
+
+[package.optional-dependencies]
+ui = [
+    { name = "pandas" },
+    { name = "streamlit" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "httpx", specifier = ">=0.27" },
+    { name = "pandas", marker = "extra == 'ui'", specifier = ">=2.0" },
+    { name = "pydantic", specifier = ">=2.0" },
+    { name = "pytest", specifier = ">=9.1.1" },
+    { name = "pytest-asyncio", specifier = ">=1.4.0" },
+    { name = "pyyaml", specifier = ">=6.0" },
+    { name = "streamlit", marker = "extra == 'ui'", specifier = ">=1.36" },
+    { name = "typer", specifier = ">=0.12" },
+]
+provides-extras = ["ui"]
 
 [[package]]
 name = "watchdog"

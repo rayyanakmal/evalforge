@@ -3,7 +3,7 @@
 # (population figure, Sydney-vs-Canberra, Nile-vs-Amazon, China-vs-India).
 # The agent is expected to verify each fact via the lookup tool.
 #
-# NOTE: the plain `evalforge run` CLI calls the LLM once per test (no tool
+# NOTE: the plain `verdictlab run` CLI calls the LLM once per test (no tool
 # loop). The tool-using journeys in examples/gen_realistic_samples.py come
 # from the ToolAgent in that script, which runs the same Executor path with
 # a custom generate_fn. Run `python examples/gen_realistic_samples.py` to
