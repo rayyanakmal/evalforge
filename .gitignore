@@ -29,3 +29,6 @@ build/
 # Generated eval output — never commit
 verdictlab-output/
 verdictlab-baselines/
+
+# Agent context — never commit (local-only working agreement)
+AGENTS.md
